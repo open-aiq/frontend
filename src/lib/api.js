@@ -1,74 +1,40 @@
-// Trailing slashes are stripped so `${BASE_URL}/devices` never becomes `//devices`.
+import { useAuth } from '@clerk/react'
+import { useMemo } from 'react'
+
 const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(/\/+$/, '')
 
-async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-
+async function request(path, options = {}, getToken) {
+  const token = getToken ? await getToken() : null
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
   if (!res.ok) {
     let message = `Request failed (${res.status})`
     try {
       const body = await res.json()
       message = body.details || body.error || message
-    } catch {
-      // response had no JSON body — keep the default message
-    }
-    // Expose the status so callers can tell "no data yet" (404) from real failures.
+    } catch { /* keep fallback */ }
     const error = new Error(message)
     error.status = res.status
     throw error
   }
-
   if (res.status === 204) return null
   return res.json()
 }
 
-// GET /devices → Device[] ({ id, device_id, name, created_at, updated_at })
-export async function listDevices() {
-  const body = await request('/devices')
-  return body.data ?? []
+export function useApi() {
+  const { getToken } = useAuth()
+  return useMemo(() => ({
+    listDevices: async () => (await request('/devices', {}, getToken)).data ?? [],
+    registerDevice: async (name) => (await request('/devices', { method: 'POST', body: JSON.stringify({ name }) }, getToken)).data,
+    updateDevice: async (id, patch) => (await request(`/devices/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }, getToken)).data,
+    rotateDeviceKey: async (id) => (await request(`/devices/${id}/rotate-key`, { method: 'POST' }, getToken)).data,
+    deleteDevice: async (id) => request(`/devices/${id}`, { method: 'DELETE' }, getToken),
+    getDeviceCurrent: async (id) => (await request(`/devices/${id}/current`, {}, getToken)).data,
+    getDeviceHistorical: async (id, timeline) => (await request(`/devices/${id}/historical?timeline=${encodeURIComponent(timeline)}`, {}, getToken)).data ?? [],
+  }), [getToken])
 }
 
-// POST /devices → CreatedDevice (includes the one-time device_key)
-export async function registerDevice(name) {
-  const body = await request('/devices', {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  })
-  return body.data
-}
-
-// PATCH /devices/{id} — partial update; patch: { name?, is_outdoor?, is_public? }
-export async function updateDevice(id, patch) {
-  const body = await request(`/devices/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(patch),
-  })
-  return body.data
-}
-
-// POST /devices/{id}/rotate-key → device with the new one-time device_key
-export async function rotateDeviceKey(id) {
-  const body = await request(`/devices/${id}/rotate-key`, { method: 'POST' })
-  return body.data
-}
-
-// DELETE /devices/{id}
-export async function deleteDevice(id) {
-  await request(`/devices/${id}`, { method: 'DELETE' })
-}
-
-// GET /devices/{id}/current → last-hour averages + status/last_seen/location.
-// Throws with err.status === 404 when the device has never reported.
-export async function getDeviceCurrent(id) {
-  const body = await request(`/devices/${id}/current`)
-  return body.data
-}
-
-// GET /devices/{id}/historical?timeline= → DataPoint[] ({ timestamp, label, metrics })
-export async function getDeviceHistorical(id, timeline) {
-  const body = await request(`/devices/${id}/historical?timeline=${encodeURIComponent(timeline)}`)
-  return body.data ?? []
-}
+export async function listPublicDevices() { return (await request('/public/devices')).data ?? [] }
+export async function getPublicDeviceCurrent(id) { return (await request(`/public/devices/${id}/current`)).data }
+export async function getPublicDeviceHistorical(id, timeline) { return (await request(`/public/devices/${id}/historical?timeline=${encodeURIComponent(timeline)}`)).data ?? [] }

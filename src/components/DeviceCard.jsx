@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getDeviceCurrent } from '@/lib/api'
+import { useApi } from '@/lib/api'
 import { aqiInfo } from '@/lib/aqi'
 import { cn } from '@/lib/utils'
 
@@ -59,6 +59,7 @@ export function DeviceFlags({ device, className }) {
 }
 
 export function DeviceCard({ device }) {
+  const { getDeviceCurrent } = useApi()
   const navigate = useNavigate()
   const [current, setCurrent] = useState(null)
   const [state, setState] = useState('loading') // 'loading' | 'ready' | 'nodata' | 'error'
@@ -78,7 +79,7 @@ export function DeviceCard({ device }) {
     return () => {
       cancelled = true
     }
-  }, [device.id])
+  }, [device.id, getDeviceCurrent])
 
   const aqi = current ? aqiInfo(current.aqi) : null
   // Once data is in, the whole card wears the AQI band color (AirVisual style).

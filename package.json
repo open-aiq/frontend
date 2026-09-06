@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@clerk/react": "^6.15.1",
+    "@clerk/ui": "^1.32.2",
     "@fontsource-variable/geist": "^5.2.9",
     "@tailwindcss/vite": "^4.3.2",
     "class-variance-authority": "^0.7.1",

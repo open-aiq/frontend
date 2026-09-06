@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Copy, KeyRound, Loader2, Trash2 } from 'lucide-react'
+import { UserButton } from '@clerk/react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -15,9 +16,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { deleteDevice, listDevices, rotateDeviceKey, updateDevice } from '@/lib/api'
+import { useApi } from '@/lib/api'
 
 export function DeviceSettingsPage() {
+  const { deleteDevice, listDevices, rotateDeviceKey, updateDevice } = useApi()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -49,7 +51,7 @@ export function DeviceSettingsPage() {
     } catch {
       setState('error')
     }
-  }, [id])
+  }, [id, listDevices])
 
   useEffect(() => {
     loadDevice()
@@ -146,7 +148,7 @@ export function DeviceSettingsPage() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">Device settings</h1>
             <p className="font-mono text-xs text-muted-foreground">{device.device_id}</p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2"><ThemeToggle /><UserButton /></div>
         </header>
 
         <main className="mt-8 space-y-6">

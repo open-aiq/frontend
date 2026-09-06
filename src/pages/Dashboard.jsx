@@ -3,10 +3,11 @@ import { Loader2, ServerCrash, Inbox } from 'lucide-react'
 
 import { DeviceCard } from '@/components/DeviceCard'
 import { RegisterDeviceDialog } from '@/components/RegisterDeviceDialog'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { listDevices } from '@/lib/api'
+import { PageHeader } from '@/components/PageHeader'
+import { useApi } from '@/lib/api'
 
 export function Dashboard() {
+  const { listDevices } = useApi()
   const [devices, setDevices] = useState([])
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'error'
   const [error, setError] = useState(null)
@@ -21,7 +22,7 @@ export function Dashboard() {
       setError(err.message)
       setStatus('error')
     }
-  }, [])
+  }, [listDevices])
 
   useEffect(() => {
     loadDevices()
@@ -30,18 +31,7 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Devices</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your registered air quality sensors.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <RegisterDeviceDialog onRegistered={loadDevices} />
-          </div>
-        </header>
+        <PageHeader title="Devices" description="Manage your registered air quality sensors." actions={<RegisterDeviceDialog onRegistered={loadDevices} />} />
 
         <main className="mt-8">
           {status === 'loading' && (

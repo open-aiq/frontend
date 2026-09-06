@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CloudOff, Loader2, ServerCrash, Settings } from 'lucide-react'
+import { UserButton } from '@clerk/react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +14,7 @@ import {
 import { DeviceFlags, StatusBadge, deviceFlags } from '@/components/DeviceCard'
 import { HistoryChart } from '@/components/HistoryChart'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { getDeviceCurrent, getDeviceHistorical, listDevices } from '@/lib/api'
+import { useApi } from '@/lib/api'
 import { aqiInfo } from '@/lib/aqi'
 
 const TIMELINES = [
@@ -53,6 +54,7 @@ function Metric({ label, value, unit }) {
 }
 
 export function DevicePage() {
+  const { getDeviceCurrent, getDeviceHistorical, listDevices } = useApi()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -76,7 +78,7 @@ export function DevicePage() {
     } catch {
       setDeviceState('error')
     }
-  }, [id])
+  }, [id, listDevices])
 
   useEffect(() => {
     loadDevice()
@@ -98,7 +100,7 @@ export function DevicePage() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [getDeviceCurrent, id])
 
   useEffect(() => {
     let cancelled = false
@@ -116,7 +118,7 @@ export function DevicePage() {
     return () => {
       cancelled = true
     }
-  }, [id, timeline])
+  }, [getDeviceHistorical, id, timeline])
 
   const aqi = current ? aqiInfo(current.aqi) : null
 
@@ -151,6 +153,7 @@ export function DevicePage() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <UserButton />
             <Button
               variant="outline"
               onClick={() => navigate(`/devices/${id}/settings`)}
