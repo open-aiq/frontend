@@ -9,6 +9,18 @@ reset; and register the exact development and production frontend origins and
 redirect URLs. The matching origins must also be present in the backend's
 `CLERK_AUTHORIZED_PARTIES`.
 
+## Public map
+
+The public landing page and community map use MapLibre GL JS with OpenFreeMap's
+keyless public Liberty style. No map account or API key is required. Set the
+optional `VITE_MAP_STYLE_URL` only when overriding the basemap with another
+MapLibre-compatible style. OpenFreeMap/OpenMapTiles/OpenStreetMap attribution is
+provided by the style and rendered by MapLibre.
+
+Public routes live at `/`, `/map`, and `/devices/:id`; the Clerk-protected
+dashboard lives below `/app`. Firebase Hosting rewrites all routes to the Vite
+entrypoint.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

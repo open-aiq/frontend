@@ -49,6 +49,16 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+.maplibregl-map {
+  font: inherit;
+}
+
+.maplibregl-popup-content {
+  border-radius: 0.875rem;
+  padding: 0.75rem;
+  box-shadow: 0 18px 45px rgb(15 23 42 / 20%);
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);

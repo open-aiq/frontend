@@ -128,7 +128,7 @@ export function DevicePage() {
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <Link
-              to="/"
+              to="/app"
               className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="size-4" /> Devices
@@ -156,7 +156,7 @@ export function DevicePage() {
             <UserButton />
             <Button
               variant="outline"
-              onClick={() => navigate(`/devices/${id}/settings`)}
+              onClick={() => navigate(`/app/devices/${id}/settings`)}
               aria-label="Device settings"
             >
               <Settings className="size-4" /> Settings

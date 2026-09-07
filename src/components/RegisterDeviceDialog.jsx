@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, Loader2, Plus } from 'lucide-react'
+import { Copy, Eye, EyeOff, Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,7 @@ export function RegisterDeviceDialog({ onRegistered }) {
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [created, setCreated] = useState(null)
+  const [showKey, setShowKey] = useState(false)
 
   function resetAndClose() {
     setOpen(false)
@@ -30,6 +31,7 @@ export function RegisterDeviceDialog({ onRegistered }) {
     setTimeout(() => {
       setName('')
       setCreated(null)
+      setShowKey(false)
       setSubmitting(false)
     }, 200)
   }
@@ -52,9 +54,9 @@ export function RegisterDeviceDialog({ onRegistered }) {
     }
   }
 
-  function copyKey() {
-    navigator.clipboard.writeText(created.device_key)
-    toast.success('Device key copied to clipboard')
+  function copyValue(value, label) {
+    navigator.clipboard.writeText(value)
+    toast.success(`${label} copied to clipboard`)
   }
 
   return (
@@ -79,19 +81,21 @@ export function RegisterDeviceDialog({ onRegistered }) {
             <div className="grid gap-3 py-2">
               <div className="grid gap-1.5">
                 <Label className="text-muted-foreground">Device ID</Label>
-                <code className="rounded-md bg-muted px-3 py-2 text-sm break-all">
-                  {created.device_id}
-                </code>
+                <div className="flex items-center gap-2">
+                  <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">{created.device_id}</code>
+                  <Button type="button" size="icon" variant="outline" onClick={() => copyValue(created.device_id, 'Device ID')} title="Copy device ID" aria-label="Copy device ID"><Copy /></Button>
+                </div>
               </div>
               <div className="grid gap-1.5">
                 <Label className="text-muted-foreground">Device key</Label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">
-                    {created.device_key}
+                  <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">
+                    {showKey ? created.device_key : '•'.repeat(Math.min(created.device_key.length, 32))}
                   </code>
-                  <Button type="button" size="icon" variant="outline" onClick={copyKey}>
-                    <Copy className="size-4" />
+                  <Button type="button" size="icon" variant="outline" onClick={() => setShowKey((visible) => !visible)} title={showKey ? 'Hide device key' : 'Show device key'} aria-label={showKey ? 'Hide device key' : 'Show device key'}>
+                    {showKey ? <EyeOff /> : <Eye />}
                   </Button>
+                  <Button type="button" size="icon" variant="outline" onClick={() => copyValue(created.device_key, 'Device key')} title="Copy device key" aria-label="Copy device key"><Copy /></Button>
                 </div>
               </div>
             </div>

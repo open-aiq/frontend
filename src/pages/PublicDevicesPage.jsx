@@ -14,7 +14,7 @@ export function PublicDevicesPage() {
       {state === 'loading' && <div className="flex justify-center py-24"><Loader2 className="size-6 animate-spin" /></div>}
       {state === 'error' && <div className="flex justify-center gap-2 py-24"><ServerCrash /> Couldn’t load public devices.</div>}
       {state === 'ready' && !devices.length && <div className="flex justify-center gap-2 py-24"><Inbox /> No public devices yet.</div>}
-      {state === 'ready' && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{devices.map((d) => <Link key={d.id} to={`/public/devices/${d.id}`}><Card className="h-full transition-shadow hover:shadow-md"><CardHeader><CardTitle>{d.name}</CardTitle></CardHeader><CardContent className="flex items-center gap-2 text-sm text-muted-foreground"><Globe className="size-4" /> {d.is_outdoor ? 'Outdoor' : 'Indoor'} sensor</CardContent></Card></Link>)}</div>}
+      {state === 'ready' && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{devices.map((d) => <Link key={d.id} to={`/devices/${d.id}`}><Card className="h-full transition-shadow hover:shadow-md"><CardHeader><CardTitle>{d.name}</CardTitle></CardHeader><CardContent className="flex items-center gap-2 text-sm text-muted-foreground"><Globe className="size-4" /> {d.is_outdoor ? 'Outdoor' : 'Indoor'} sensor</CardContent></Card></Link>)}</div>}
     </main>
   </div></div>
 }

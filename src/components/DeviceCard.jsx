@@ -89,9 +89,9 @@ export function DeviceCard({ device }) {
     <Card
       role="button"
       tabIndex={0}
-      onClick={() => navigate(`/devices/${device.id}`)}
+      onClick={() => navigate(`/app/devices/${device.id}`)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(`/devices/${device.id}`)
+        if (e.key === 'Enter' || e.key === ' ') navigate(`/app/devices/${device.id}`)
       }}
       className={cn(
         'cursor-pointer transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring',

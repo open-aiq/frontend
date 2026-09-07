@@ -28,6 +28,7 @@ export function DeviceSettingsPage() {
   const [name, setName] = useState('')
   const [isOutdoor, setIsOutdoor] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
+  const [isLocationPublic, setIsLocationPublic] = useState(false)
   const [saving, setSaving] = useState(false)
   const [rotating, setRotating] = useState(false)
   const [rotatedKey, setRotatedKey] = useState(null)
@@ -47,6 +48,7 @@ export function DeviceSettingsPage() {
       setName(found.name)
       setIsOutdoor(found.is_outdoor)
       setIsPublic(found.is_public)
+      setIsLocationPublic(found.is_location_public)
       setState('ready')
     } catch {
       setState('error')
@@ -68,6 +70,7 @@ export function DeviceSettingsPage() {
         name: trimmed,
         is_outdoor: isOutdoor,
         is_public: isPublic,
+        is_location_public: isPublic && isLocationPublic,
       })
       setDevice(updated)
       toast.success('Settings saved')
@@ -108,7 +111,7 @@ export function DeviceSettingsPage() {
     try {
       await deleteDevice(id)
       toast.success(`Deleted "${device.name}"`)
-      navigate('/')
+      navigate('/app')
     } catch (err) {
       toast.error(err.message)
       setDeleting(false)
@@ -127,7 +130,7 @@ export function DeviceSettingsPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-muted/30">
         <p className="font-medium">Device not found</p>
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link to="/app" className="text-sm text-muted-foreground hover:text-foreground">
           Back to devices
         </Link>
       </div>
@@ -140,7 +143,7 @@ export function DeviceSettingsPage() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <Link
-              to={`/devices/${id}`}
+              to={`/app/devices/${id}`}
               className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="size-4" /> {device.name}
@@ -186,7 +189,25 @@ export function DeviceSettingsPage() {
                       Share this device’s readings publicly.
                     </p>
                   </div>
-                  <Switch id="device-public" checked={isPublic} onCheckedChange={setIsPublic} />
+                  <Switch id="device-public" checked={isPublic} onCheckedChange={(checked) => { setIsPublic(checked); if (!checked) setIsLocationPublic(false) }} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                  <div>
+                    <Label htmlFor="device-location-public">Share exact location</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Publishes the latest precise telemetry coordinates on the community map. Anyone can download them.
+                    </p>
+                  </div>
+                  <Switch
+                    id="device-location-public"
+                    checked={isLocationPublic}
+                    disabled={!isPublic}
+                    onCheckedChange={(checked) => {
+                      if (checked && !window.confirm('Publish this device’s exact latest coordinates to everyone?')) return
+                      setIsLocationPublic(checked)
+                    }}
+                  />
                 </div>
 
                 <Button type="submit" disabled={saving || !name.trim()}>
