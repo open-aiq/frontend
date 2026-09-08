@@ -5,13 +5,7 @@ import { UserButton } from '@clerk/react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -130,7 +124,10 @@ export function DeviceSettingsPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-muted/30">
         <p className="font-medium">Device not found</p>
-        <Link to="/app" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
           Back to devices
         </Link>
       </div>
@@ -151,7 +148,10 @@ export function DeviceSettingsPage() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">Device settings</h1>
             <p className="font-mono text-xs text-muted-foreground">{device.device_id}</p>
           </div>
-          <div className="flex items-center gap-2"><ThemeToggle /><UserButton /></div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserButton />
+          </div>
         </header>
 
         <main className="mt-8 space-y-6">
@@ -161,7 +161,10 @@ export function DeviceSettingsPage() {
               <CardDescription>Name and visibility of this device.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSave} className="space-y-6">
+              <form
+                onSubmit={handleSave}
+                className="space-y-6"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="device-name">Name</Label>
                   <Input
@@ -179,7 +182,11 @@ export function DeviceSettingsPage() {
                       The sensor is installed outdoors.
                     </p>
                   </div>
-                  <Switch id="device-outdoor" checked={isOutdoor} onCheckedChange={setIsOutdoor} />
+                  <Switch
+                    id="device-outdoor"
+                    checked={isOutdoor}
+                    onCheckedChange={setIsOutdoor}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
@@ -189,14 +196,22 @@ export function DeviceSettingsPage() {
                       Share this device’s readings publicly.
                     </p>
                   </div>
-                  <Switch id="device-public" checked={isPublic} onCheckedChange={(checked) => { setIsPublic(checked); if (!checked) setIsLocationPublic(false) }} />
+                  <Switch
+                    id="device-public"
+                    checked={isPublic}
+                    onCheckedChange={(checked) => {
+                      setIsPublic(checked)
+                      if (!checked) setIsLocationPublic(false)
+                    }}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
                   <div>
                     <Label htmlFor="device-location-public">Share exact location</Label>
                     <p className="text-sm text-muted-foreground">
-                      Publishes the latest precise telemetry coordinates on the community map. Anyone can download them.
+                      Publishes the latest precise telemetry coordinates on the community map.
+                      Anyone can download them.
                     </p>
                   </div>
                   <Switch
@@ -204,13 +219,22 @@ export function DeviceSettingsPage() {
                     checked={isLocationPublic}
                     disabled={!isPublic}
                     onCheckedChange={(checked) => {
-                      if (checked && !window.confirm('Publish this device’s exact latest coordinates to everyone?')) return
+                      if (
+                        checked &&
+                        !window.confirm(
+                          'Publish this device’s exact latest coordinates to everyone?',
+                        )
+                      )
+                        return
                       setIsLocationPublic(checked)
                     }}
                   />
                 </div>
 
-                <Button type="submit" disabled={saving || !name.trim()}>
+                <Button
+                  type="submit"
+                  disabled={saving || !name.trim()}
+                >
                   {saving && <Loader2 className="size-4 animate-spin" />} Save changes
                 </Button>
               </form>
@@ -234,14 +258,27 @@ export function DeviceSettingsPage() {
                     <code className="min-w-0 flex-1 break-all rounded bg-background px-2 py-1 font-mono text-xs">
                       {rotatedKey}
                     </code>
-                    <Button size="icon" variant="ghost" onClick={handleCopyKey} aria-label="Copy key">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleCopyKey}
+                      aria-label="Copy key"
+                    >
                       <Copy className="size-4" />
                     </Button>
                   </div>
                 </div>
               )}
-              <Button variant="outline" onClick={handleRotate} disabled={rotating}>
-                {rotating ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
+              <Button
+                variant="outline"
+                onClick={handleRotate}
+                disabled={rotating}
+              >
+                {rotating ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <KeyRound className="size-4" />
+                )}
                 Rotate key
               </Button>
             </CardContent>
@@ -255,8 +292,16 @@ export function DeviceSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
                 Delete device
               </Button>
             </CardContent>

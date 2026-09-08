@@ -29,7 +29,10 @@ export function usePublicMapDevices() {
     }
     load()
     const interval = window.setInterval(() => load(true), REFRESH_MS)
-    return () => { active = false; window.clearInterval(interval) }
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
   }, [reloadKey])
 
   return { devices, state, error, retry: () => setReloadKey((key) => key + 1) }

@@ -12,9 +12,22 @@ if (!clerkKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY')
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ClerkProvider publishableKey={clerkKey} signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/app" signUpFallbackRedirectUrl="/app" afterSignOutUrl="/" appearance={{ theme: shadcn }}>
+    <ClerkProvider
+      publishableKey={clerkKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/app"
+      signUpFallbackRedirectUrl="/app"
+      afterSignOutUrl="/"
+      appearance={{ theme: shadcn }}
+    >
       <BrowserRouter>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <App />
         </ThemeProvider>
       </BrowserRouter>

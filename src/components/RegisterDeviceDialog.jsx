@@ -60,7 +60,10 @@ export function RegisterDeviceDialog({ onRegistered }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : resetAndClose())}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => (next ? setOpen(true) : resetAndClose())}
+    >
       <DialogTrigger asChild>
         <Button>
           <Plus className="size-4" />
@@ -82,20 +85,49 @@ export function RegisterDeviceDialog({ onRegistered }) {
               <div className="grid gap-1.5">
                 <Label className="text-muted-foreground">Device ID</Label>
                 <div className="flex items-center gap-2">
-                  <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">{created.device_id}</code>
-                  <Button type="button" size="icon" variant="outline" onClick={() => copyValue(created.device_id, 'Device ID')} title="Copy device ID" aria-label="Copy device ID"><Copy /></Button>
+                  <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">
+                    {created.device_id}
+                  </code>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => copyValue(created.device_id, 'Device ID')}
+                    title="Copy device ID"
+                    aria-label="Copy device ID"
+                  >
+                    <Copy />
+                  </Button>
                 </div>
               </div>
               <div className="grid gap-1.5">
                 <Label className="text-muted-foreground">Device key</Label>
                 <div className="flex items-center gap-2">
                   <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 text-sm break-all">
-                    {showKey ? created.device_key : '•'.repeat(Math.min(created.device_key.length, 32))}
+                    {showKey
+                      ? created.device_key
+                      : '•'.repeat(Math.min(created.device_key.length, 32))}
                   </code>
-                  <Button type="button" size="icon" variant="outline" onClick={() => setShowKey((visible) => !visible)} title={showKey ? 'Hide device key' : 'Show device key'} aria-label={showKey ? 'Hide device key' : 'Show device key'}>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setShowKey((visible) => !visible)}
+                    title={showKey ? 'Hide device key' : 'Show device key'}
+                    aria-label={showKey ? 'Hide device key' : 'Show device key'}
+                  >
                     {showKey ? <EyeOff /> : <Eye />}
                   </Button>
-                  <Button type="button" size="icon" variant="outline" onClick={() => copyValue(created.device_key, 'Device key')} title="Copy device key" aria-label="Copy device key"><Copy /></Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => copyValue(created.device_key, 'Device key')}
+                    title="Copy device key"
+                    aria-label="Copy device key"
+                  >
+                    <Copy />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -124,11 +156,17 @@ export function RegisterDeviceDialog({ onRegistered }) {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline">
+                <Button
+                  type="button"
+                  variant="outline"
+                >
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit" disabled={submitting || !name.trim()}>
+              <Button
+                type="submit"
+                disabled={submitting || !name.trim()}
+              >
                 {submitting && <Loader2 className="size-4 animate-spin" />}
                 Register
               </Button>

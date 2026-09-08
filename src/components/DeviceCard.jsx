@@ -3,13 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CloudOff, Globe, House, Lock, ServerCrash, TreePine } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApi } from '@/lib/api'
 import { aqiInfo } from '@/lib/aqi'
@@ -26,7 +20,9 @@ export function StatusBadge({ status, className }) {
         className,
       )}
     >
-      <span className={cn('size-1.5 rounded-full', online ? 'bg-emerald-500' : 'bg-current opacity-50')} />
+      <span
+        className={cn('size-1.5 rounded-full', online ? 'bg-emerald-500' : 'bg-current opacity-50')}
+      />
       {online ? 'Online' : 'Offline'}
     </span>
   )
@@ -50,7 +46,12 @@ export function DeviceFlags({ device, className }) {
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
       {deviceFlags(device).map(({ icon: Icon, label, description }) => (
-        <Badge key={label} variant="outline" title={description} className={className}>
+        <Badge
+          key={label}
+          variant="outline"
+          title={description}
+          className={className}
+        >
           <Icon /> {label}
         </Badge>
       ))}
@@ -103,7 +104,10 @@ export function DeviceCard({ device }) {
       <CardHeader>
         <CardTitle>{device.name}</CardTitle>
         <CardAction>
-          <DeviceFlags device={device} className={colored ? 'border-current/25 text-current' : undefined} />
+          <DeviceFlags
+            device={device}
+            className={colored ? 'border-current/25 text-current' : undefined}
+          />
         </CardAction>
       </CardHeader>
 
@@ -132,7 +136,10 @@ export function DeviceCard({ device }) {
 
         {state === 'ready' && current && (
           <div className="space-y-3">
-            <StatusBadge status={current.status} className="text-current" />
+            <StatusBadge
+              status={current.status}
+              className="text-current"
+            />
 
             <div>
               <div className="text-5xl leading-none font-semibold">{current.aqi}</div>
@@ -146,8 +153,8 @@ export function DeviceCard({ device }) {
             </p>
 
             <p className="text-xs opacity-75">
-              {current.temperature.toFixed(1)}°C · {current.humidity.toFixed(0)}% humidity ·{' '}
-              feels {current.heat_index.toFixed(1)}°C
+              {current.temperature.toFixed(1)}°C · {current.humidity.toFixed(0)}% humidity · feels{' '}
+              {current.heat_index.toFixed(1)}°C
             </p>
           </div>
         )}

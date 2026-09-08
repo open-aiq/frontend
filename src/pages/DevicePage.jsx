@@ -4,13 +4,7 @@ import { ArrowLeft, CloudOff, Loader2, ServerCrash, Settings } from 'lucide-reac
 import { UserButton } from '@clerk/react'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeviceFlags, StatusBadge, deviceFlags } from '@/components/DeviceCard'
 import { HistoryChart } from '@/components/HistoryChart'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -205,7 +199,10 @@ export function DevicePage() {
                     {device && (
                       <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
                         {deviceFlags(device).map(({ icon: Icon, label, description }) => (
-                          <span key={label} className="inline-flex items-center gap-1.5 text-xs">
+                          <span
+                            key={label}
+                            className="inline-flex items-center gap-1.5 text-xs"
+                          >
                             <Icon className="size-3.5 text-muted-foreground" />
                             <span className="font-medium">{label}</span>
                             <span className="text-muted-foreground">· {description}</span>
@@ -225,12 +222,36 @@ export function DevicePage() {
                     </div>
 
                     <div className="grid grid-cols-3 gap-x-8 gap-y-4">
-                      <Metric label="PM1.0" value={current.pm1_0.toFixed(1)} unit="µg/m³" />
-                      <Metric label="PM2.5" value={current.pm2_5.toFixed(1)} unit="µg/m³" />
-                      <Metric label="PM10" value={current.pm10_0.toFixed(1)} unit="µg/m³" />
-                      <Metric label="Temperature" value={current.temperature.toFixed(1)} unit="°C" />
-                      <Metric label="Humidity" value={current.humidity.toFixed(0)} unit="%" />
-                      <Metric label="Heat index" value={current.heat_index.toFixed(1)} unit="°C" />
+                      <Metric
+                        label="PM1.0"
+                        value={current.pm1_0.toFixed(1)}
+                        unit="µg/m³"
+                      />
+                      <Metric
+                        label="PM2.5"
+                        value={current.pm2_5.toFixed(1)}
+                        unit="µg/m³"
+                      />
+                      <Metric
+                        label="PM10"
+                        value={current.pm10_0.toFixed(1)}
+                        unit="µg/m³"
+                      />
+                      <Metric
+                        label="Temperature"
+                        value={current.temperature.toFixed(1)}
+                        unit="°C"
+                      />
+                      <Metric
+                        label="Humidity"
+                        value={current.humidity.toFixed(0)}
+                        unit="%"
+                      />
+                      <Metric
+                        label="Heat index"
+                        value={current.heat_index.toFixed(1)}
+                        unit="°C"
+                      />
                     </div>
                   </div>
 
@@ -302,7 +323,10 @@ export function DevicePage() {
               )}
 
               {historyState === 'ready' && points.length > 0 && (
-                <HistoryChart points={points} metricKey={metricKey} />
+                <HistoryChart
+                  points={points}
+                  metricKey={metricKey}
+                />
               )}
             </CardContent>
           </Card>

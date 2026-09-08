@@ -28,7 +28,10 @@ function ChartTooltip({ active, payload, label }) {
       <p className="mb-1 font-medium text-popover-foreground">{label}</p>
       <dl className="space-y-0.5">
         {TOOLTIP_ROWS.map(({ key, label: rowLabel, format }) => (
-          <div key={key} className="flex justify-between gap-4">
+          <div
+            key={key}
+            className="flex justify-between gap-4"
+          >
             <dt className="text-muted-foreground">{rowLabel}</dt>
             <dd className="font-medium tabular-nums text-popover-foreground">
               {format(metrics[key])}
@@ -51,15 +54,38 @@ export function HistoryChart({ points, metricKey }) {
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+    <ResponsiveContainer
+      width="100%"
+      height={280}
+    >
+      <AreaChart
+        data={data}
+        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+      >
         <defs>
-          <linearGradient id="history-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
+          <linearGradient
+            id="history-fill"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop
+              offset="0%"
+              stopColor="var(--chart-1)"
+              stopOpacity={0.25}
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--chart-1)"
+              stopOpacity={0.02}
+            />
           </linearGradient>
         </defs>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <CartesianGrid
+          vertical={false}
+          stroke="var(--border)"
+        />
         <XAxis
           dataKey="label"
           tickLine={false}
@@ -73,7 +99,10 @@ export function HistoryChart({ points, metricKey }) {
           axisLine={false}
           tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
         />
-        <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border)' }} />
+        <Tooltip
+          content={<ChartTooltip />}
+          cursor={{ stroke: 'var(--border)' }}
+        />
         <Area
           type="monotone"
           dataKey="value"
