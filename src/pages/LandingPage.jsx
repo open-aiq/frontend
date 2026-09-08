@@ -125,6 +125,8 @@ export function LandingPage() {
                   'border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white',
                 )}
                 href={DOCUMENTATION_URL}
+                target="_blank"
+                rel="noreferrer"
                 title="Read the Open AIQ documentation"
               >
                 <BookOpen />

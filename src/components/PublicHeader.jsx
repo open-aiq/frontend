@@ -35,8 +35,8 @@ export function PublicHeader({ overlay = false }) {
           <a
             className={cn(buttonVariants({ variant: 'ghost' }), 'max-sm:hidden')}
             href={DOCUMENTATION_URL}
-            target={onMapPage ? '_blank' : undefined}
-            rel={onMapPage ? 'noreferrer' : undefined}
+            target="_blank"
+            rel="noreferrer"
             title="Read the Open AIQ documentation"
           >
             <BookOpen /> Docs
