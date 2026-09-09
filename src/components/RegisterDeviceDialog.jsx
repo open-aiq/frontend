@@ -24,6 +24,7 @@ export function RegisterDeviceDialog({ onRegistered }) {
   const [submitting, setSubmitting] = useState(false)
   const [created, setCreated] = useState(null)
   const [showKey, setShowKey] = useState(false)
+  const [nameError, setNameError] = useState('')
 
   function resetAndClose() {
     setOpen(false)
@@ -33,6 +34,7 @@ export function RegisterDeviceDialog({ onRegistered }) {
       setCreated(null)
       setShowKey(false)
       setSubmitting(false)
+      setNameError('')
     }, 200)
   }
 
@@ -41,6 +43,7 @@ export function RegisterDeviceDialog({ onRegistered }) {
     const trimmed = name.trim()
     if (!trimmed) return
 
+    setNameError('')
     setSubmitting(true)
     try {
       const device = await registerDevice(trimmed)
@@ -48,6 +51,8 @@ export function RegisterDeviceDialog({ onRegistered }) {
       onRegistered?.()
       toast.success(`Registered "${device.name}"`)
     } catch (err) {
+      const violation = err.fieldError?.('body', 'name')
+      if (violation) setNameError(violation.detail)
       toast.error(err.message)
     } finally {
       setSubmitting(false)
@@ -149,9 +154,24 @@ export function RegisterDeviceDialog({ onRegistered }) {
                 id="device-name"
                 placeholder="Living Room Sensor"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  setName(event.target.value)
+                  setNameError('')
+                }}
+                maxLength={100}
+                aria-invalid={Boolean(nameError)}
+                aria-describedby={nameError ? 'device-name-error' : undefined}
                 autoFocus
               />
+              {nameError && (
+                <p
+                  id="device-name-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
+                  {nameError}
+                </p>
+              )}
             </div>
 
             <DialogFooter>

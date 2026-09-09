@@ -27,6 +27,7 @@ export function DeviceSettingsPage() {
   const [rotating, setRotating] = useState(false)
   const [rotatedKey, setRotatedKey] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [nameError, setNameError] = useState('')
 
   // There is no GET /devices/{id}; resolve the device from the list.
   const loadDevice = useCallback(async () => {
@@ -58,6 +59,7 @@ export function DeviceSettingsPage() {
     const trimmed = name.trim()
     if (!trimmed) return
 
+    setNameError('')
     setSaving(true)
     try {
       const updated = await updateDevice(id, {
@@ -69,6 +71,8 @@ export function DeviceSettingsPage() {
       setDevice(updated)
       toast.success('Settings saved')
     } catch (err) {
+      const violation = err.fieldError?.('body', 'name')
+      if (violation) setNameError(violation.detail)
       toast.error(err.message)
     } finally {
       setSaving(false)
@@ -170,9 +174,24 @@ export function DeviceSettingsPage() {
                   <Input
                     id="device-name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      setNameError('')
+                    }}
+                    maxLength={100}
+                    aria-invalid={Boolean(nameError)}
+                    aria-describedby={nameError ? 'device-name-error' : undefined}
                     placeholder="Living Room Sensor"
                   />
+                  {nameError && (
+                    <p
+                      id="device-name-error"
+                      className="text-sm text-destructive"
+                      role="alert"
+                    >
+                      {nameError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-4">

@@ -6,6 +6,29 @@ const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1'
   '',
 )
 
+export class ApiError extends Error {
+  constructor(status, body = {}) {
+    const message =
+      body.detail || body.details || body.title || body.error || `Request failed (${status})`
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.type = body.type ?? null
+    this.title = body.title ?? null
+    this.detail = body.detail ?? body.details ?? null
+    this.instance = body.instance ?? null
+    this.errors = Array.isArray(body.errors) ? body.errors : []
+  }
+
+  fieldError(location, name) {
+    return this.errors.find((item) => item.in === location && item.name === name) ?? null
+  }
+}
+
+export function apiErrorFromBody(status, body) {
+  return new ApiError(status, body && typeof body === 'object' ? body : {})
+}
+
 async function request(path, options = {}, getToken) {
   const token = getToken ? await getToken() : null
   const headers = { ...options.headers }
@@ -15,16 +38,13 @@ async function request(path, options = {}, getToken) {
   if (token) headers.Authorization = `Bearer ${token}`
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
   if (!res.ok) {
-    let message = `Request failed (${res.status})`
+    let body = null
     try {
-      const body = await res.json()
-      message = body.details || body.error || message
+      body = await res.json()
     } catch {
       /* keep fallback */
     }
-    const error = new Error(message)
-    error.status = res.status
-    throw error
+    throw apiErrorFromBody(res.status, body)
   }
   if (res.status === 204) return null
   return res.json()
