@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Copy, KeyRound, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Copy, KeyRound, Loader2, Trash2, TriangleAlert } from 'lucide-react'
 import { UserButton } from '@clerk/react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -27,6 +35,8 @@ export function DeviceSettingsPage() {
   const [rotating, setRotating] = useState(false)
   const [rotatedKey, setRotatedKey] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [nameError, setNameError] = useState('')
 
   // There is no GET /devices/{id}; resolve the device from the list.
@@ -102,8 +112,9 @@ export function DeviceSettingsPage() {
     toast.success('Key copied to clipboard')
   }
 
-  async function handleDelete() {
-    if (!window.confirm(`Delete "${device.name}"? This cannot be undone.`)) return
+  async function handleDelete(e) {
+    e.preventDefault()
+    if (deleteConfirmation !== device.name) return
 
     setDeleting(true)
     try {
@@ -114,6 +125,12 @@ export function DeviceSettingsPage() {
       toast.error(err.message)
       setDeleting(false)
     }
+  }
+
+  function handleDeleteDialogChange(open) {
+    if (deleting) return
+    setDeleteDialogOpen(open)
+    if (!open) setDeleteConfirmation('')
   }
 
   if (state === 'loading') {
@@ -313,7 +330,7 @@ export function DeviceSettingsPage() {
             <CardContent>
               <Button
                 variant="destructive"
-                onClick={handleDelete}
+                onClick={() => setDeleteDialogOpen(true)}
                 disabled={deleting}
               >
                 {deleting ? (
@@ -326,6 +343,78 @@ export function DeviceSettingsPage() {
             </CardContent>
           </Card>
         </main>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onOpenChange={handleDeleteDialogChange}
+        >
+          <DialogContent
+            className="sm:max-w-lg"
+            showCloseButton={!deleting}
+          >
+            <DialogHeader>
+              <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <TriangleAlert className="size-5" />
+              </div>
+              <DialogTitle>Delete {device.name} permanently?</DialogTitle>
+              <DialogDescription>
+                This action permanently deletes the device and all of its sensor data. Open AIQ does
+                not currently support soft deletion or recovery.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p className="font-medium text-destructive">The following will be deleted:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                <li>The device registration and settings</li>
+                <li>All historical air-quality, climate, and location readings</li>
+              </ul>
+            </div>
+
+            <form
+              id="delete-device-form"
+              onSubmit={handleDelete}
+              className="space-y-2"
+            >
+              <Label htmlFor="delete-device-confirmation">
+                Type <span className="font-mono font-semibold text-foreground">{device.name}</span>{' '}
+                to confirm
+              </Label>
+              <Input
+                id="delete-device-confirmation"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                disabled={deleting}
+                autoComplete="off"
+                autoFocus
+              />
+            </form>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDeleteDialogChange(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="delete-device-form"
+                variant="destructive"
+                disabled={deleting || deleteConfirmation !== device.name}
+              >
+                {deleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Delete device and data
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
