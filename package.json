@@ -4,6 +4,7 @@
   "version": "0.3.1",
   "type": "module",
   "scripts": {
+    "help": "bash scripts/help.sh",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint --deny-warnings .",
@@ -11,7 +12,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "bash scripts/deploy.sh",
+    "release": "bash scripts/release.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

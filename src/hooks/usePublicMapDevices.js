@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { listPublicMapDevices } from '@/lib/api'
+import { uniqueMapDevices } from '@/lib/map'
 
 const REFRESH_MS = 5 * 60 * 1000
 
@@ -17,7 +18,7 @@ export function usePublicMapDevices() {
       try {
         const data = await listPublicMapDevices()
         if (!active) return
-        setDevices(data)
+        setDevices(uniqueMapDevices(data))
         setError(null)
         setState('ready')
       } catch (err) {

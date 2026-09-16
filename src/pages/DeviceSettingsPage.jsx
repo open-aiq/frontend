@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Copy, KeyRound, Loader2, Trash2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Copy, KeyRound, Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
 import { UserButton } from '@clerk/react'
 import { toast } from 'sonner'
 
@@ -31,6 +31,7 @@ export function DeviceSettingsPage() {
   const [isOutdoor, setIsOutdoor] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
   const [isLocationPublic, setIsLocationPublic] = useState(false)
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [rotating, setRotating] = useState(false)
   const [rotatedKey, setRotatedKey] = useState(null)
@@ -237,7 +238,10 @@ export function DeviceSettingsPage() {
                     checked={isPublic}
                     onCheckedChange={(checked) => {
                       setIsPublic(checked)
-                      if (!checked) setIsLocationPublic(false)
+                      if (!checked) {
+                        setIsLocationPublic(false)
+                        setLocationDialogOpen(false)
+                      }
                     }}
                   />
                 </div>
@@ -255,14 +259,11 @@ export function DeviceSettingsPage() {
                     checked={isLocationPublic}
                     disabled={!isPublic}
                     onCheckedChange={(checked) => {
-                      if (
-                        checked &&
-                        !window.confirm(
-                          'Publish this device’s exact latest coordinates to everyone?',
-                        )
-                      )
-                        return
-                      setIsLocationPublic(checked)
+                      if (checked) {
+                        setLocationDialogOpen(true)
+                      } else {
+                        setIsLocationPublic(false)
+                      }
                     }}
                   />
                 </div>
@@ -343,6 +344,49 @@ export function DeviceSettingsPage() {
             </CardContent>
           </Card>
         </main>
+
+        <Dialog
+          open={locationDialogOpen}
+          onOpenChange={setLocationDialogOpen}
+        >
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <MapPin className="size-5" />
+              </div>
+              <DialogTitle>Share this device’s exact location?</DialogTitle>
+              <DialogDescription>
+                The latest precise coordinates reported by {device.name} will be publicly visible on
+                the community map.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-muted-foreground">
+              Anyone can view and download this location data. Only enable this setting if the
+              device owner and people at its location have agreed to share it publicly.
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocationDialogOpen(false)}
+              >
+                Keep location private
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsLocationPublic(true)
+                  setLocationDialogOpen(false)
+                }}
+              >
+                <MapPin className="size-4" />
+                Share exact location
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog
           open={deleteDialogOpen}

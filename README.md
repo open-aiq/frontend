@@ -23,6 +23,30 @@ MapLibre.
 Public routes live at `/`, `/map`, and `/devices/:id`; the Clerk-protected dashboard lives below
 `/app`. Firebase Hosting rewrites all routes to the Vite entrypoint.
 
+## Deployments and releases
+
+Deploy the current checkout to Firebase Hosting with:
+
+```sh
+npm run deploy
+```
+
+This creates a production build before running `firebase deploy --only hosting`. It requires an
+authenticated Firebase CLI with access to the configured project.
+
+Cut a release from a clean `main` branch with:
+
+```sh
+npm run release
+```
+
+The release script accepts a major, minor, or patch bump, or an exact semantic version; runs lint,
+tests, and a production build; updates `package.json` and `package-lock.json` with `npm version`;
+pushes the resulting version commit and tag; and publishes a GitHub release. It requires an
+authenticated `gh` CLI. To bypass the version prompt, use `npm run release -- 1.4.0` (a leading `v`
+and prerelease suffix such as `1.4.0-rc.1` are also accepted). Deployment is intentionally a
+separate command.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { devicesToGeoJSON, filterMapDevices } from '@/lib/map'
+import { devicesToGeoJSON, filterMapDevices, uniqueMapDevices } from '@/lib/map'
 
 const devices = [
   {
@@ -32,6 +32,23 @@ describe('devicesToGeoJSON', () => {
       geometry: { coordinates: [67.01, 24.86] },
       properties: { aqi: 80 },
     })
+  })
+})
+
+describe('uniqueMapDevices', () => {
+  it('keeps only the newest reading for each device', () => {
+    const duplicate = {
+      ...devices[0],
+      aqi: 140,
+      measured_at: '2026-01-02T00:00:00Z',
+    }
+    const older = {
+      ...devices[0],
+      aqi: 35,
+      measured_at: '2026-01-01T00:00:00Z',
+    }
+
+    expect(uniqueMapDevices([older, devices[1], duplicate])).toEqual([duplicate, devices[1]])
   })
 })
 

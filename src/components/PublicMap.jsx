@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils'
 
 const WORLD_CENTER = [20, 20]
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
+const MAX_PRIVACY_ZOOM = 12
+const DEVICE_ICON_SIZE = 64
+const DEVICE_COLORS = ['#A8E05F', '#FDD64B', '#FF9B57', '#FE6A69', '#A97ABC', '#A87383']
 
 // Vite must bundle MapLibre's module worker as a self-contained asset. Without
 // this explicit URL, dependency optimization can point the browser at a worker
@@ -43,6 +46,55 @@ function colorExpression(property) {
     301,
     '#A87383',
   ]
+}
+
+function iconExpression(property) {
+  return [
+    'step',
+    ['get', property],
+    'device-0',
+    51,
+    'device-1',
+    101,
+    'device-2',
+    151,
+    'device-3',
+    201,
+    'device-4',
+    301,
+    'device-5',
+  ]
+}
+
+function deviceIcon(color) {
+  const canvas = document.createElement('canvas')
+  canvas.width = DEVICE_ICON_SIZE
+  canvas.height = DEVICE_ICON_SIZE
+  const context = canvas.getContext('2d')
+
+  context.strokeStyle = '#ffffff'
+  context.lineWidth = 4
+  context.lineCap = 'round'
+  context.beginPath()
+  context.moveTo(32, 12)
+  context.lineTo(32, 20)
+  context.moveTo(26, 12)
+  context.lineTo(38, 12)
+  context.stroke()
+
+  context.fillStyle = color
+  context.strokeStyle = '#ffffff'
+  context.lineWidth = 4
+  context.beginPath()
+  context.roundRect(12, 18, 40, 36, 8)
+  context.fill()
+  context.stroke()
+
+  context.fillStyle = 'rgba(23, 32, 51, 0.28)'
+  context.fillRect(22, 45, 4, 3)
+  context.fillRect(30, 45, 4, 3)
+  context.fillRect(38, 45, 4, 3)
+  return context.getImageData(0, 0, DEVICE_ICON_SIZE, DEVICE_ICON_SIZE)
 }
 
 function relativeTime(value) {
@@ -112,6 +164,7 @@ export function PublicMap({
       style: mapStyle,
       center: WORLD_CENTER,
       zoom: 1.25,
+      maxZoom: MAX_PRIVACY_ZOOM,
       attributionControl: true,
     })
     const resizeObserver = new ResizeObserver(() => map.resize())
@@ -119,11 +172,14 @@ export function PublicMap({
     mapRef.current = map
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
     map.on('load', () => {
+      DEVICE_COLORS.forEach((color, index) => {
+        map.addImage(`device-${index}`, deviceIcon(color), { pixelRatio: 2 })
+      })
       map.addSource('devices', {
         type: 'geojson',
         data: geojsonRef.current,
         cluster: true,
-        clusterMaxZoom: 13,
+        clusterMaxZoom: 10,
         clusterRadius: 52,
         clusterProperties: { worst_aqi: ['max', ['get', 'aqi']] },
       })
@@ -148,16 +204,31 @@ export function PublicMap({
         paint: { 'text-color': '#172033' },
       })
       map.addLayer({
-        id: 'device-points',
+        id: 'device-privacy-area',
         type: 'circle',
         source: 'devices',
         filter: ['!', ['has', 'point_count']],
         paint: {
           'circle-color': colorExpression('aqi'),
-          'circle-radius': 20,
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 3,
-          'circle-opacity': ['case', ['==', ['get', 'status'], 'offline'], 0.62, 1],
+          'circle-radius': 38,
+          'circle-opacity': ['case', ['==', ['get', 'status'], 'offline'], 0.08, 0.14],
+          'circle-stroke-color': colorExpression('aqi'),
+          'circle-stroke-opacity': 0.3,
+          'circle-stroke-width': 1,
+        },
+      })
+      map.addLayer({
+        id: 'device-points',
+        type: 'symbol',
+        source: 'devices',
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'icon-image': iconExpression('aqi'),
+          'icon-size': 2,
+          'icon-allow-overlap': true,
+        },
+        paint: {
+          'icon-opacity': ['case', ['==', ['get', 'status'], 'offline'], 0.68, 1],
         },
       })
       map.addLayer({
@@ -165,13 +236,21 @@ export function PublicMap({
         type: 'symbol',
         source: 'devices',
         filter: ['!', ['has', 'point_count']],
-        layout: { 'text-field': ['to-string', ['get', 'aqi']], 'text-size': 12 },
+        layout: {
+          'text-field': ['to-string', ['get', 'aqi']],
+          'text-size': 16,
+          'text-allow-overlap': true,
+        },
         paint: { 'text-color': '#172033' },
       })
       if (devicesRef.current.length) {
         const bounds = new LngLatBounds()
         devicesRef.current.forEach((device) => bounds.extend([device.lon, device.lat]))
-        map.fitBounds(bounds, { padding: compact ? 45 : 80, maxZoom: 11, duration: 0 })
+        map.fitBounds(bounds, {
+          padding: compact ? 45 : 80,
+          maxZoom: MAX_PRIVACY_ZOOM - 1,
+          duration: 0,
+        })
         fittedRef.current = true
       }
 
@@ -181,7 +260,7 @@ export function PublicMap({
         const zoom = await map
           .getSource('devices')
           .getClusterExpansionZoom(feature.properties.cluster_id)
-        map.easeTo({ center: feature.geometry.coordinates, zoom })
+        map.easeTo({ center: feature.geometry.coordinates, zoom: Math.min(zoom, MAX_PRIVACY_ZOOM) })
       })
       map.on('click', 'device-points', (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? '')
@@ -218,7 +297,11 @@ export function PublicMap({
     if (!fittedRef.current && devices.length) {
       const bounds = new LngLatBounds()
       devices.forEach((device) => bounds.extend([device.lon, device.lat]))
-      map.fitBounds(bounds, { padding: compact ? 45 : 80, maxZoom: 11, duration: 0 })
+      map.fitBounds(bounds, {
+        padding: compact ? 45 : 80,
+        maxZoom: MAX_PRIVACY_ZOOM - 1,
+        duration: 0,
+      })
       fittedRef.current = true
     }
   }, [compact, devices, geojson])
@@ -229,7 +312,7 @@ export function PublicMap({
     if (map && selected)
       map.flyTo({
         center: [selected.lon, selected.lat],
-        zoom: Math.max(map.getZoom(), 10),
+        zoom: Math.min(Math.max(map.getZoom(), 10), MAX_PRIVACY_ZOOM),
         essential: false,
       })
   }, [deviceIndex, selectedId])
