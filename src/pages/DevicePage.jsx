@@ -326,6 +326,7 @@ export function DevicePage() {
                 <HistoryChart
                   points={points}
                   metricKey={metricKey}
+                  timeline={timeline}
                 />
               )}
             </CardContent>

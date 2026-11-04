@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -7,6 +8,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+
+import { buildSeries } from '@/lib/history'
 
 // Rows shown in the hover tooltip for every bucket, regardless of the plotted metric.
 const TOOLTIP_ROWS = [
@@ -19,39 +22,47 @@ const TOOLTIP_ROWS = [
   { key: 'heat_index', label: 'Heat index', format: (v) => `${v.toFixed(1)} °C` },
 ]
 
-function ChartTooltip({ active, payload, label }) {
+const formatMetric = (format, value) =>
+  typeof value === 'number' && Number.isFinite(value) ? format(value) : '—'
+
+function ChartTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
-  const metrics = payload[0].payload.metrics
+  const { metrics, tooltipLabel } = payload[0].payload
 
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
-      <p className="mb-1 font-medium text-popover-foreground">{label}</p>
-      <dl className="space-y-0.5">
-        {TOOLTIP_ROWS.map(({ key, label: rowLabel, format }) => (
-          <div
-            key={key}
-            className="flex justify-between gap-4"
-          >
-            <dt className="text-muted-foreground">{rowLabel}</dt>
-            <dd className="font-medium tabular-nums text-popover-foreground">
-              {format(metrics[key])}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <p className="mb-1 font-medium text-popover-foreground">{tooltipLabel}</p>
+      {!metrics && <p className="text-muted-foreground">No data</p>}
+      {metrics && (
+        <dl className="space-y-0.5">
+          {TOOLTIP_ROWS.map(({ key, label: rowLabel, format }) => (
+            <div
+              key={key}
+              className="flex justify-between gap-4"
+            >
+              <dt className="text-muted-foreground">{rowLabel}</dt>
+              <dd className="font-medium tabular-nums text-popover-foreground">
+                {formatMetric(format, metrics[key])}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </div>
   )
 }
 
 // HistoryChart plots ONE metric over time (single hue, no legend — the active
 // metric toggle names the series); the tooltip carries the full reading.
-// points: [{ timestamp, label, metrics }]; metricKey: e.g. "aqi".
-export function HistoryChart({ points, metricKey }) {
-  const data = points.map((p) => ({
-    label: p.label,
-    value: p.metrics[metricKey],
-    metrics: p.metrics,
-  }))
+// points: [{ timestamp, label, metrics }]; metricKey: e.g. "aqi";
+// timeline: the API range ("daily", "weekly", "monthly", "yearly"). Every
+// bucket of the range is plotted; buckets without readings are gaps, and times
+// are shown in the viewer's local time zone.
+export function HistoryChart({ points, metricKey, timeline }) {
+  const data = useMemo(
+    () => buildSeries(points, timeline, metricKey),
+    [points, timeline, metricKey],
+  )
 
   return (
     <ResponsiveContainer
@@ -87,7 +98,7 @@ export function HistoryChart({ points, metricKey }) {
           stroke="var(--border)"
         />
         <XAxis
-          dataKey="label"
+          dataKey="axisLabel"
           tickLine={false}
           axisLine={false}
           tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
@@ -109,11 +120,28 @@ export function HistoryChart({ points, metricKey }) {
           stroke="var(--chart-1)"
           strokeWidth={2}
           fill="url(#history-fill)"
-          dot={false}
+          connectNulls={false}
+          dot={renderIsolatedDot}
           activeDot={{ r: 4 }}
           isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>
+  )
+}
+
+// An area cannot draw a lone value between two gaps, so show it as a dot.
+function renderIsolatedDot({ cx, cy, index, payload }) {
+  if (!payload?.isolated || cx == null || cy == null) {
+    return <g key={index} />
+  }
+  return (
+    <circle
+      key={index}
+      cx={cx}
+      cy={cy}
+      r={3}
+      fill="var(--chart-1)"
+    />
   )
 }
