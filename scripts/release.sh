@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Bump the npm version, push its commit and tag, and publish a GitHub release.
+# Verify the app, bump the npm version, push its commit and tag, and publish a
+# GitHub release with the production build attached.
 set -euo pipefail
 
 RELEASE_BRANCH="${RELEASE_BRANCH:-main}"
+RELEASE_DIR="${RELEASE_DIR:-release}"
 
 die() {
 	echo "error: $*" >&2
@@ -57,13 +59,25 @@ case "$confirm" in
 esac
 
 echo "==> Verifying release"
-npm run lint:check
-npm test
-npm run build
+make verify
 
 echo "==> Bumping version"
 created="$(npm version "${next#v}")"
 [ "$created" = "$next" ] || die "npm created unexpected version '$created'"
+
+echo "==> Packaging $next"
+rm -rf "$RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
+bundle="frontend-${next}.tar.gz"
+tar -czf "$RELEASE_DIR/$bundle" -C dist .
+(
+	cd "$RELEASE_DIR"
+	if command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 "$bundle" >SHA256SUMS
+	else
+		sha256sum "$bundle" >SHA256SUMS
+	fi
+)
 
 echo "==> Pushing $next"
 git push --atomic origin "$branch" "$next"
@@ -72,6 +86,7 @@ echo "==> Creating GitHub release"
 gh release create "$next" \
 	--title "$next" \
 	--target "$branch" \
-	--generate-notes
+	--generate-notes \
+	"$RELEASE_DIR"/*
 
-echo "==> Done: $next published. Run 'npm run deploy' to deploy it."
+echo "==> Done: $next published. Run 'make deploy' to deploy it."
