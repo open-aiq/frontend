@@ -148,6 +148,7 @@ export function PublicDevicePage() {
                         <HistoryChart
                           points={points}
                           metricKey="aqi"
+                          timeline="daily"
                         />
                       ) : (
                         <p className="py-16 text-center text-muted-foreground">
