@@ -1,5 +1,6 @@
 {
   "projects": {
+    "default": "open-airiq",
     "fr": "open-airiq"
   },
   "targets": {},
