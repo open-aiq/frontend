@@ -23,29 +23,33 @@ MapLibre.
 Public routes live at `/`, `/map`, and `/devices/:id`; the Clerk-protected dashboard lives below
 `/app`. Firebase Hosting rewrites all routes to the Vite entrypoint.
 
-## Deployments and releases
+## Development, deployments and releases
 
-Deploy the current checkout to Firebase Hosting with:
+Run `make help` for every command. The npm scripts still work; the Makefile wraps them so the
+commands match the backend, app and firmware repositories.
 
 ```sh
-npm run deploy
+make init          # npm ci
+make dev           # Vite against the local backend (.env.development)
+make dev:prod      # Vite against production (.env.production)
+make verify        # format-check, lint, test, build
+make deploy        # production build + firebase deploy --only hosting
 ```
 
-This creates a production build before running `firebase deploy --only hosting`. It requires an
-authenticated Firebase CLI with access to the configured project.
+`make deploy` requires an authenticated Firebase CLI with access to the configured project.
 
 Cut a release from a clean `main` branch with:
 
 ```sh
-npm run release
+make release                      # prompts for major/minor/patch/x.y.z
+make release version=1.4.0        # a leading v and suffixes such as 1.4.0-rc.1 are accepted
 ```
 
-The release script accepts a major, minor, or patch bump, or an exact semantic version; runs lint,
-tests, and a production build; updates `package.json` and `package-lock.json` with `npm version`;
-pushes the resulting version commit and tag; and publishes a GitHub release. It requires an
-authenticated `gh` CLI. To bypass the version prompt, use `npm run release -- 1.4.0` (a leading `v`
-and prerelease suffix such as `1.4.0-rc.1` are also accepted). Deployment is intentionally a
-separate command.
+`scripts/release.sh` runs `make verify`, updates `package.json` and `package-lock.json` with
+`npm version` (which commits and tags `vX.Y.Z`), packages the production build as
+`release/frontend-vX.Y.Z.tar.gz` with a `SHA256SUMS` file, pushes the commit and tag together, and
+publishes a GitHub release with those files attached. It requires an authenticated `gh` CLI.
+Deployment is intentionally a separate step: run `make deploy` afterwards.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
