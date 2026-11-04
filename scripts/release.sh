@@ -57,7 +57,7 @@ case "$confirm" in
 esac
 
 echo "==> Verifying release"
-npm run lint
+npm run lint:check
 npm test
 npm run build
 
