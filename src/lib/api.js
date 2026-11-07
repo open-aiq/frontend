@@ -55,9 +55,6 @@ export function useApi() {
   return useMemo(
     () => ({
       listDevices: async () => (await request('/devices', {}, getToken)).data ?? [],
-      registerDevice: async (name) =>
-        (await request('/devices', { method: 'POST', body: JSON.stringify({ name }) }, getToken))
-          .data,
       updateDevice: async (id, patch) =>
         (
           await request(
@@ -66,8 +63,6 @@ export function useApi() {
             getToken,
           )
         ).data,
-      rotateDeviceKey: async (id) =>
-        (await request(`/devices/${id}/rotate-key`, { method: 'POST' }, getToken)).data,
       deleteDevice: async (id) => request(`/devices/${id}`, { method: 'DELETE' }, getToken),
       getDeviceCurrent: async (id) => (await request(`/devices/${id}/current`, {}, getToken)).data,
       getDeviceHistorical: async (id, timeline) =>

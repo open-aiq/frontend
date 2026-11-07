@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Copy, KeyRound, Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
 import { UserButton } from '@clerk/react'
 import { toast } from 'sonner'
 
@@ -21,7 +21,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { useApi } from '@/lib/api'
 
 export function DeviceSettingsPage() {
-  const { deleteDevice, listDevices, rotateDeviceKey, updateDevice } = useApi()
+  const { deleteDevice, listDevices, updateDevice } = useApi()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -33,8 +33,6 @@ export function DeviceSettingsPage() {
   const [isLocationPublic, setIsLocationPublic] = useState(false)
   const [locationDialogOpen, setLocationDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [rotating, setRotating] = useState(false)
-  const [rotatedKey, setRotatedKey] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -88,29 +86,6 @@ export function DeviceSettingsPage() {
     } finally {
       setSaving(false)
     }
-  }
-
-  async function handleRotate() {
-    const ok = window.confirm(
-      'Rotate the device key? The current key stops working immediately and the device must be updated with the new one.',
-    )
-    if (!ok) return
-
-    setRotating(true)
-    try {
-      const rotated = await rotateDeviceKey(id)
-      setRotatedKey(rotated.device_key)
-      toast.success('Device key rotated')
-    } catch (err) {
-      toast.error(err.message)
-    } finally {
-      setRotating(false)
-    }
-  }
-
-  async function handleCopyKey() {
-    await navigator.clipboard.writeText(rotatedKey)
-    toast.success('Key copied to clipboard')
   }
 
   async function handleDelete(e) {
@@ -282,43 +257,11 @@ export function DeviceSettingsPage() {
             <CardHeader>
               <CardTitle>Device key</CardTitle>
               <CardDescription>
-                Rotate the secret key if it was exposed. The old key stops working immediately.
+                Need a new key? Open this monitor in the Open AIQ mobile app. It replaces the key
+                and sends it straight to the monitor over Bluetooth, so the secret never leaves your
+                phone.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {rotatedKey && (
-                <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
-                  <p className="text-sm font-medium">
-                    New key — store it now, it won’t be shown again:
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="min-w-0 flex-1 break-all rounded bg-background px-2 py-1 font-mono text-xs">
-                      {rotatedKey}
-                    </code>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={handleCopyKey}
-                      aria-label="Copy key"
-                    >
-                      <Copy className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                onClick={handleRotate}
-                disabled={rotating}
-              >
-                {rotating ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <KeyRound className="size-4" />
-                )}
-                Rotate key
-              </Button>
-            </CardContent>
           </Card>
 
           <Card className="border-destructive/50">

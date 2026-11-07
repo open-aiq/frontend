@@ -62,7 +62,7 @@ export function LandingPage() {
                   )}
                   to="/app"
                 >
-                  Register a device
+                  Open your dashboard
                 </Link>
               </div>
             </div>

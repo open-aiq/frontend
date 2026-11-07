@@ -3,7 +3,6 @@ import { Inbox, Loader2, ServerCrash } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { DeviceCard } from '@/components/DeviceCard'
-import { RegisterDeviceDialog } from '@/components/RegisterDeviceDialog'
 import { PageHeader } from '@/components/PageHeader'
 import { useApi } from '@/lib/api'
 
@@ -42,7 +41,6 @@ export function Dashboard() {
         <main className="mt-8">
           <div className="mb-4 flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Your devices</h2>
-            <RegisterDeviceDialog onRegistered={loadDevices} />
           </div>
           {status === 'loading' && (
             <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
@@ -77,7 +75,8 @@ export function Dashboard() {
               </span>
               <p className="font-medium">No devices yet</p>
               <p className="max-w-md text-sm text-muted-foreground">
-                Register your first device to start monitoring air quality.
+                Add your first monitor from the Open AIQ mobile app. It pairs over Bluetooth and
+                sets everything up for you, and the monitor shows up here once it’s online.
               </p>
             </div>
           )}
