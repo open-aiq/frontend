@@ -1,10 +1,12 @@
-import { BookOpen, Wind } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { GitHubIcon } from '@/components/GitHubIcon'
+import { MonitorGlyph } from '@/components/MonitorIllustration'
 import { buttonVariants } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { DOCUMENTATION_URL, ORGANIZATION_URL } from '@/config'
+import { appPath } from '@/lib/paths'
 import { cn } from '@/lib/utils'
 
 export function PublicHeader({ overlay = false }) {
@@ -15,7 +17,7 @@ export function PublicHeader({ overlay = false }) {
     <header
       className={cn(
         'relative z-20 border-b bg-background/90 backdrop-blur',
-        overlay && 'border-white/15 bg-slate-950/65 text-white',
+        overlay && 'bg-background/70',
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -23,8 +25,8 @@ export function PublicHeader({ overlay = false }) {
           to="/"
           className="flex items-center gap-2 font-semibold tracking-tight"
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-emerald-500 text-slate-950">
-            <Wind className="size-5" />
+          <span className="grid size-9 place-items-center rounded-full bg-secondary text-secondary-foreground">
+            <MonitorGlyph />
           </span>
           Open AIQ
         </Link>
@@ -54,7 +56,7 @@ export function PublicHeader({ overlay = false }) {
           {onMapPage ? (
             <a
               className={buttonVariants({ variant: 'default' })}
-              href="/app"
+              href={appPath('/app')}
               target="_blank"
               rel="noreferrer"
             >

@@ -38,7 +38,7 @@ export function PublicMapPage() {
       <main className="relative grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] overflow-hidden md:grid-cols-[360px_1fr]">
         <aside
           className={cn(
-            'z-10 flex min-h-0 flex-col border-r bg-background max-md:absolute max-md:inset-x-3 max-md:bottom-3 max-md:max-h-[70%] max-md:rounded-2xl max-md:border max-md:shadow-2xl',
+            'z-10 flex min-h-0 flex-col border-r bg-background max-md:absolute max-md:inset-x-3 max-md:bottom-3 max-md:max-h-[70%] max-md:rounded-3xl max-md:border max-md:shadow-lift',
             !panelOpen && 'max-md:max-h-14 max-md:overflow-hidden',
           )}
         >
@@ -53,7 +53,7 @@ export function PublicMapPage() {
           <div className="border-b p-4">
             <h1 className="text-xl font-semibold tracking-tight">Community air map</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Live readings shared by sensor owners.
+              Live readings shared by people in your community.
             </p>
             <div className="relative mt-4">
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -120,7 +120,7 @@ export function PublicMapPage() {
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             {map.state === 'ready' && filtered.length === 0 && (
               <p className="px-3 py-10 text-center text-sm text-muted-foreground">
-                No sensors match these filters.
+                No sensors match these filters. Try widening your search.
               </p>
             )}
             <div className="space-y-2">
@@ -134,8 +134,8 @@ export function PublicMapPage() {
                       setPanelOpen(false)
                     }}
                     className={cn(
-                      'w-full rounded-xl border p-3 text-left transition hover:bg-muted/60',
-                      selectedId === device.id && 'border-emerald-500 ring-2 ring-emerald-500/15',
+                      'w-full rounded-2xl border bg-card p-3 text-left transition hover:bg-accent/60',
+                      selectedId === device.id && 'border-primary ring-2 ring-primary/15',
                     )}
                   >
                     <div className="flex items-start gap-3">

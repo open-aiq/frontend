@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { RedirectToSignIn, Show, SignIn, SignUp } from '@clerk/react'
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 
+import { MonitorIllustration } from '@/components/MonitorIllustration'
 import { Toaster } from '@/components/ui/sonner'
 
 const Dashboard = lazy(() =>
@@ -27,10 +28,20 @@ const PublicMapPage = lazy(() =>
   import('@/pages/PublicMapPage').then(({ PublicMapPage }) => ({ default: PublicMapPage })),
 )
 
+// The visual playground exists only in review mode (`make review`). The mode
+// check is static, so production builds drop it entirely.
+const Playground =
+  import.meta.env.MODE === 'review'
+    ? lazy(() => import('@/review/Playground').then(({ Playground }) => ({ default: Playground })))
+    : null
+
 function RouteFallback() {
   return (
-    <main className="grid min-h-screen place-items-center bg-background">
-      <span className="text-sm text-muted-foreground">Loading…</span>
+    <main
+      className="grid min-h-screen place-items-center bg-background surface-glow"
+      aria-busy="true"
+    >
+      <MonitorIllustration label="Loading" />
     </main>
   )
 }
@@ -50,7 +61,7 @@ function Private({ children }) {
 
 function AuthPage({ children }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4 surface-glow">
       {children}
     </main>
   )
@@ -91,6 +102,12 @@ export default function App() {
             path="/"
             element={<LandingPage />}
           />
+          {Playground && (
+            <Route
+              path="/playground"
+              element={<Playground />}
+            />
+          )}
           <Route
             path="/map"
             element={<PublicMapPage />}

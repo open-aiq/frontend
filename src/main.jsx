@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/react'
 import { shadcn } from '@clerk/ui/themes'
 import './index.css'
 import App from './App.jsx'
+import { BASE_PATH } from './lib/paths.js'
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 if (!clerkKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY')
@@ -21,7 +22,7 @@ createRoot(document.getElementById('root')).render(
       afterSignOutUrl="/"
       appearance={{ theme: shadcn }}
     >
-      <BrowserRouter>
+      <BrowserRouter basename={BASE_PATH || '/'}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

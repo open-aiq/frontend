@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Globe, Inbox, Loader2, ServerCrash } from 'lucide-react'
-import { PageHeader } from '@/components/PageHeader'
+import { PublicHeader } from '@/components/PublicHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { listPublicDevices } from '@/lib/api'
 
@@ -18,11 +18,12 @@ export function PublicDevicesPage() {
   }, [])
   return (
     <div className="min-h-screen bg-muted/30">
+      <PublicHeader />
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <PageHeader
-          title="Public devices"
-          description="Explore air quality shared by the community."
-        />
+        <h1 className="text-2xl font-semibold tracking-tight">Public devices</h1>
+        <p className="text-sm text-muted-foreground">
+          Explore air quality shared by the community.
+        </p>
         <main className="mt-8">
           {state === 'loading' && (
             <div className="flex justify-center py-24">

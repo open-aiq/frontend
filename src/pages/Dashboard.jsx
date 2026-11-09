@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Inbox, Loader2, ServerCrash } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { AppShell } from '@/components/AppShell'
 import { DeviceCard } from '@/components/DeviceCard'
-import { PageHeader } from '@/components/PageHeader'
+import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { useApi } from '@/lib/api'
 
 export function Dashboard() {
@@ -30,69 +29,56 @@ export function Dashboard() {
   }, [loadDevices])
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <PageHeader
-          title="Dashboard"
-          description="Manage your registered air quality sensors."
-          showDashboard={false}
-        />
-
-        <main className="mt-8">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold">Your devices</h2>
-          </div>
-          {status === 'loading' && (
-            <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
-              <Loader2 className="size-6 animate-spin" />
-              <p className="text-sm">Loading devices…</p>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-24 text-center">
-              <span className="grid size-14 place-items-center rounded-full bg-destructive/10">
-                <ServerCrash className="size-7 text-destructive" />
-              </span>
-              <p className="font-medium">Devices are temporarily unavailable</p>
-              <p className="max-w-md text-sm text-muted-foreground">
-                We couldn’t reach the Open AIQ backend. Check that it is running, then try again.
-              </p>
-              <Button
-                variant="outline"
-                onClick={loadDevices}
+    <AppShell
+      title="My monitors"
+      subtitle="Your air monitors at a glance"
+    >
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {status === 'loading' && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((key) => (
+              <div
+                key={key}
+                className="p-5 surface-raised"
               >
-                Try again
-              </Button>
-              <span className="sr-only">Technical error: {error}</span>
-            </div>
-          )}
+                <LoadingState label="Loading your devices" />
+              </div>
+            ))}
+          </div>
+        )}
 
-          {status === 'ready' && devices.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-24 text-center">
-              <span className="grid size-14 place-items-center rounded-full bg-muted">
-                <Inbox className="size-7 text-muted-foreground" />
-              </span>
-              <p className="font-medium">No devices yet</p>
-              <p className="max-w-md text-sm text-muted-foreground">
-                Add your first monitor from the Open AIQ mobile app. It pairs over Bluetooth and
-                sets everything up for you, and the monitor shows up here once it’s online.
-              </p>
-            </div>
-          )}
+        {status === 'error' && (
+          <div className="surface-raised">
+            <ErrorState
+              title="We couldn’t load your devices"
+              onRetry={loadDevices}
+              detail={error}
+            >
+              Our server didn’t answer this time. It’s usually brief, so give it another try.
+            </ErrorState>
+          </div>
+        )}
 
-          {status === 'ready' && devices.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {devices.map((device) => (
-                <DeviceCard
-                  key={device.id}
-                  device={device}
-                />
-              ))}
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+        {status === 'ready' && devices.length === 0 && (
+          <div className="surface-raised">
+            <EmptyState title="No devices yet">
+              Add your first monitor from the Open AIQ mobile app. It pairs over Bluetooth and sets
+              everything up for you. Your monitor shows up here once it’s online.
+            </EmptyState>
+          </div>
+        )}
+
+        {status === 'ready' && devices.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {devices.map((device) => (
+              <DeviceCard
+                key={device.id}
+                device={device}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+    </AppShell>
   )
 }

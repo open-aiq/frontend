@@ -9,9 +9,13 @@ import {
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-import { Loader2, RadioTower, ServerCrash } from 'lucide-react'
+import { CloudOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MonitorIllustration } from '@/components/MonitorIllustration'
 import { aqiInfo } from '@/lib/aqi'
+import { appPath } from '@/lib/paths'
+import { BANDS } from '@/lib/aqi-bands.g'
+import { shortAgo } from '@/lib/format'
 import { devicesToGeoJSON } from '@/lib/map'
 import { cn } from '@/lib/utils'
 
@@ -19,7 +23,7 @@ const WORLD_CENTER = [20, 20]
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const MAX_PRIVACY_ZOOM = 12
 const DEVICE_ICON_SIZE = 64
-const DEVICE_COLORS = ['#A8E05F', '#FDD64B', '#FF9B57', '#FE6A69', '#A97ABC', '#A87383']
+const DEVICE_COLORS = BANDS.map((band) => band.bg)
 
 // Vite must bundle MapLibre's module worker as a self-contained asset. Without
 // this explicit URL, dependency optimization can point the browser at a worker
@@ -30,21 +34,13 @@ function styleUrl() {
   return import.meta.env.VITE_MAP_STYLE_URL || OPENFREEMAP_STYLE
 }
 
+// A MapLibre step expression that colors each device by its AQI band.
 function colorExpression(property) {
   return [
     'step',
     ['get', property],
-    '#A8E05F',
-    51,
-    '#FDD64B',
-    101,
-    '#FF9B57',
-    151,
-    '#FE6A69',
-    201,
-    '#A97ABC',
-    301,
-    '#A87383',
+    BANDS[0].bg,
+    ...BANDS.slice(1).flatMap((band, index) => [BANDS[index].max + 1, band.bg]),
   ]
 }
 
@@ -97,18 +93,9 @@ function deviceIcon(color) {
   return context.getImageData(0, 0, DEVICE_ICON_SIZE, DEVICE_ICON_SIZE)
 }
 
-function relativeTime(value) {
-  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60000))
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.round(hours / 24)}d ago`
-}
-
 function popupContent(device) {
   const root = document.createElement('article')
-  root.className = 'space-y-2 p-1 text-slate-950'
+  root.className = 'space-y-2 p-1'
   const title = document.createElement('h3')
   title.className = 'font-semibold'
   title.textContent = device.name
@@ -116,16 +103,16 @@ function popupContent(device) {
   reading.className = 'text-sm'
   reading.textContent = `${device.aqi} US AQI · ${aqiInfo(device.aqi).label}`
   const metrics = document.createElement('p')
-  metrics.className = 'text-xs text-slate-600'
+  metrics.className = 'text-xs text-muted-foreground'
   metrics.textContent = `PM2.5 ${Number(device.pm2_5).toFixed(1)} µg/m³ · ${Number(device.temperature).toFixed(1)}°C`
   const meta = document.createElement('p')
-  meta.className = 'text-xs text-slate-600'
-  meta.textContent = `${device.is_outdoor ? 'Outdoor' : 'Indoor'} · ${device.status} · ${relativeTime(device.measured_at)}`
+  meta.className = 'text-xs text-muted-foreground'
+  meta.textContent = `${device.is_outdoor ? 'Outdoor' : 'Indoor'} · ${device.status} · ${shortAgo(device.measured_at)}`
   const link = document.createElement('a')
   link.className =
-    'inline-block text-sm font-medium text-emerald-700 underline-offset-4 hover:underline'
-  link.href = `/devices/${device.id}`
-  link.textContent = 'View device'
+    'inline-block text-sm font-medium text-primary underline-offset-4 hover:underline'
+  link.href = appPath(`/devices/${device.id}`)
+  link.textContent = 'See readings'
   root.append(title, reading, metrics, meta, link)
   return root
 }
@@ -318,7 +305,7 @@ export function PublicMap({
   }, [deviceIndex, selectedId])
 
   return (
-    <div className={cn('relative overflow-hidden bg-slate-200', className)}>
+    <div className={cn('relative overflow-hidden bg-muted', className)}>
       <div className="absolute inset-0">
         <div
           ref={containerRef}
@@ -327,19 +314,23 @@ export function PublicMap({
         />
       </div>
       {state === 'loading' && (
-        <div className="absolute inset-0 grid place-items-center bg-background/70">
-          <Loader2 className="animate-spin" />
+        <div
+          className="absolute inset-0 grid place-items-center bg-background/70"
+          aria-busy="true"
+        >
+          <span className="sr-only">Loading the map…</span>
+          <Loader2 className="size-6 animate-spin text-muted-foreground motion-reduce:animate-none" />
         </div>
       )}
       {state === 'error' && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-6 text-center">
-          <div className="pointer-events-auto flex min-h-52 w-full max-w-xs flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-background/95 p-6 shadow-xl">
-            <span className="mb-3 grid size-12 place-items-center rounded-full bg-destructive/10">
-              <ServerCrash className="size-6 text-destructive" />
+          <div className="pointer-events-auto flex min-h-52 w-full max-w-xs flex-col items-center justify-center rounded-3xl border bg-popover p-6 shadow-lift">
+            <span className="mb-3 grid size-12 place-items-center rounded-full bg-accent text-primary">
+              <CloudOff className="size-6" />
             </span>
-            <p className="font-medium">Public map data is unavailable</p>
+            <p className="font-semibold">We couldn’t load the map’s sensors</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              We couldn’t reach the Open AIQ backend. Please try again.
+              It’s usually a brief hiccup. Give it another try in a moment.
             </p>
             {retry && (
               <Button
@@ -357,13 +348,11 @@ export function PublicMap({
       )}
       {state === 'ready' && devices.length === 0 && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-6 text-center">
-          <div className="flex min-h-48 w-full max-w-xs flex-col items-center justify-center rounded-2xl border bg-background/95 p-6 shadow-xl">
-            <span className="mb-3 grid size-12 place-items-center rounded-full bg-muted">
-              <RadioTower className="size-6 text-muted-foreground" />
-            </span>
-            <p className="font-medium">No public devices yet</p>
+          <div className="flex min-h-48 w-full max-w-xs flex-col items-center justify-center rounded-3xl border bg-popover p-6 shadow-lift">
+            <MonitorIllustration className="mb-2 w-24" />
+            <p className="font-semibold">No shared sensors here yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Location-enabled sensors will appear here when they are available.
+              When people share a sensor and its location, it shows up on this map.
             </p>
           </div>
         </div>
