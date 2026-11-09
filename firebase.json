@@ -4,6 +4,14 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/prototype/web/**",
+        "destination": "/prototype/web/index.html"
+      },
+      {
+        "source": "/prototype/mobile/**",
+        "destination": "/prototype/mobile/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

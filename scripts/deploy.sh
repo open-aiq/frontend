@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and deploy the frontend to Firebase Hosting.
+# Build and deploy the frontend, plus the prototype at /prototype/, to Firebase Hosting.
 set -euo pipefail
 
 die() {
@@ -12,6 +12,9 @@ command -v firebase >/dev/null 2>&1 ||
 
 echo "==> Building production frontend"
 npm run build
+
+echo "==> Building the prototype (served at /prototype/)"
+bash scripts/build-prototype.sh
 
 echo "==> Deploying to Firebase Hosting"
 firebase deploy --only hosting
