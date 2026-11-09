@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
+@import './styles/tokens.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,6 +48,95 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-card: var(--aiq-radius-card);
+  --color-sage: var(--sage);
+  --color-ink: var(--ink);
+  --color-sand: var(--sand);
+  --color-wood: var(--wood);
+  --color-highlight: var(--highlight);
+  --color-ground: var(--ground);
+  --color-online: var(--online);
+  --shadow-soft: var(--shadow-rest);
+  --shadow-lift: var(--shadow-hover);
+  --ease-calm: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --animate-float: aiq-float 7s ease-in-out infinite;
+  --animate-glow: aiq-glow 4.5s ease-in-out infinite;
+  --animate-rise: aiq-rise 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Sand & Sage colors, shadows, radii and motion come from the shared tokens
+   in docs/src/data/tokens.json (see AGENTS.md). Only shadcn's own radius scale
+   lives here. */
+:root {
+  --radius: 0.75rem;
+}
+
+/* Raised surface: hairline border, large radius, warm shadow. */
+@utility surface-raised {
+  border: 1px solid var(--border);
+  border-radius: var(--aiq-radius-card);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--shadow-rest);
+}
+
+/* Gentle lift on hover for surfaces you can click. */
+@utility surface-lift {
+  transition:
+    transform var(--aiq-duration-lift) var(--aiq-ease),
+    box-shadow var(--aiq-duration-lift) var(--aiq-ease),
+    border-color var(--aiq-duration-lift) var(--aiq-ease);
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+/* At most two faint corner glows: one camel, one sage. */
+@utility surface-glow {
+  background-image:
+    radial-gradient(
+      circle at 8% 15%,
+      color-mix(in srgb, var(--primary) 14%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 95% 90%,
+      color-mix(in srgb, var(--sage) 12%, transparent),
+      transparent 42%
+    );
+}
+
+/* Small uppercase kicker above headings. */
+@utility eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+@keyframes aiq-float {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes aiq-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes aiq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
 .maplibregl-map {
@@ -54,78 +144,34 @@
 }
 
 .maplibregl-popup-content {
-  border-radius: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
   padding: 0.75rem;
-  box-shadow: 0 18px 45px rgb(15 23 42 / 20%);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-hover);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: #2a78d6;
-  --chart-2: #1baf7a;
-  --chart-3: #eda100;
-  --chart-4: #008300;
-  --chart-5: #4a3aa7;
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+.maplibregl-popup-tip {
+  border-top-color: var(--popover) !important;
+  border-bottom-color: var(--popover) !important;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: #3987e5;
-  --chart-2: #199e70;
-  --chart-3: #c98500;
-  --chart-4: #008300;
-  --chart-5: #9085e9;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+.maplibregl-popup-close-button {
+  color: var(--muted-foreground);
+}
+
+/* Everything holds still when you've asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .surface-lift:hover {
+    transform: none;
+  }
 }
 
 @layer base {
@@ -137,5 +183,14 @@
   }
   html {
     @apply font-sans;
+  }
+  body {
+    /* Geist runs large; a 15px body matches the docs site. */
+    font-size: 0.9375rem;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
   }
 }
