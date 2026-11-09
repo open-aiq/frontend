@@ -4,7 +4,7 @@ NPM ?= npm
 RELEASE_BRANCH ?= main
 RELEASE_DIR    ?= release
 
-.PHONY: help init dev dev\:prod build preview lint\:check lint\:fix format\:fix format\:check test verify deploy clean release
+.PHONY: help init review build prototype\:build preview lint\:check lint\:fix format\:fix format\:check test verify deploy clean release
 
 ## help: Show available commands
 help:
@@ -16,17 +16,17 @@ help:
 init:
 	$(NPM) ci
 
-## dev: Start the Vite dev server against the local backend (.env.development)
-dev:
-	$(NPM) run dev
-
-## dev:prod: Start the Vite dev server against production (.env.production)
-dev\:prod:
-	$(NPM) run dev -- --mode production
+## review: Run the dashboard with mock data for visual review (no backend or sign-in needed)
+review:
+	$(NPM) run review
 
 ## build: Build the production frontend into dist/
 build:
 	$(NPM) run build
+
+## prototype:build: Build the web and mobile prototype into dist/prototype/ (needs Flutter and ../app)
+prototype\:build: build
+	$(NPM) run build:prototype
 
 ## preview: Serve the production build locally
 preview:
@@ -59,7 +59,7 @@ verify:
 	@$(MAKE) --no-print-directory test
 	@$(MAKE) --no-print-directory build
 
-## deploy: Build and deploy the current checkout to Firebase Hosting
+## deploy: Build and deploy the current checkout, with the prototype, to Firebase Hosting
 deploy:
 	bash scripts/deploy.sh
 

@@ -1,4 +1,4 @@
-# React + Vite
+# Open AIQ web dashboard
 
 > **Documentation:** See the [unified Open AIQ documentation](https://docs.air-iq.net/) for
 > dashboard usage, device guides, architecture, and API conventions. This README remains the source
@@ -8,9 +8,8 @@
 
 Set `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_URL` in the appropriate Vite environment file (see
 `.env.example`). In the Clerk Dashboard, enable Google, GitHub, and email/password sign-in; require
-email verification; enable password reset; and register the exact development and production
-frontend origins and redirect URLs. The matching origins must also be present in the backend's
-`CLERK_AUTHORIZED_PARTIES`.
+email verification; enable password reset; and register the production frontend origins and redirect
+URLs. The matching origins must also be present in the backend's `CLERK_AUTHORIZED_PARTIES`.
 
 ## Public map
 
@@ -23,6 +22,25 @@ MapLibre.
 Public routes live at `/`, `/map`, and `/devices/:id`; the Clerk-protected dashboard lives below
 `/app`. Firebase Hosting rewrites all routes to the Vite entrypoint.
 
+## Look and feel
+
+The dashboard follows the same Sand & Sage style as the docs site and the mobile app (see
+`AGENTS.md` in the workspace root). Colors, shadows, radii, motion and AQI bands come from the
+shared design tokens in `docs/src/data/tokens.json`. Change them there and run `make tokens:sync` in
+`docs/`, which rewrites `src/styles/tokens.css` and `src/lib/aqi-bands.g.js`. Don't edit those files
+by hand.
+
+The docs site's visual playground page is the spec for the monitor card (`MonitorCard.jsx`), the
+view inside a monitor (`readings.jsx`) and the shared states (`states.jsx`). In `make review`, the
+**Playground** link shows the dashboard's versions so you can compare them. Use the
+`surface-raised`, `surface-lift` and `surface-glow` utilities from `src/index.css` instead of
+hard-coded colors.
+
+Signed-in pages share one top bar, `AppShell.jsx`, to match the app's `AiqAppBar`. It shows a back
+link or the monitor mark, the title, an optional status chip and the avatar menu
+(`AccountMenu.jsx`). The theme, account, links and sign out all live in that menu, so keep the bar
+itself that simple. The visual playground page describes the full shell.
+
 ## Development, deployments and releases
 
 Run `make help` for every command. The npm scripts still work; the Makefile wraps them so the
@@ -30,11 +48,28 @@ commands match the backend, app and firmware repositories.
 
 ```sh
 make init          # npm ci
-make dev           # Vite against the local backend (.env.development)
-make dev:prod      # Vite against production (.env.production)
+make review        # the real app with mock data, for visual review
 make verify        # format-check, lint, test, build
-make deploy        # production build + firebase deploy --only hosting
+make prototype:build  # the web and mobile prototype into dist/prototype/
+make deploy        # production build + prototype + firebase deploy --only hosting
 ```
+
+There's no live dev server against a backend. The production Clerk key only works on the production
+domain, so everything beyond visual review is tested live after a deploy.
+
+`make review` runs the real pages and components with mock data. Under `--mode review`, Vite swaps
+`@/lib/api` and `@clerk/react` for the stand-ins in `src/review/`, so you don't need a backend or
+sign-in. A small panel in the corner switches between scenarios: mixed data, no devices, all
+offline, no readings yet, server error, always loading and signed out. It also links to every page.
+Production builds never include `src/review/`.
+
+We also host review mode at [`/prototype/`](https://open-airiq.web.app/prototype/), next to the
+mobile app's gallery, so anyone can try both without signing in. One switch at the top flips between
+Web and Mobile. `make prototype:build` builds it: review mode with the `/prototype/web/` base path,
+plus `make gallery:web` from the app repository, which needs Flutter and the app checked out at
+`../app` (or set `APP_DIR`). `make deploy` runs it for you. The switch page itself is
+`prototype/index.html`. For plain `<a href>` links to our own pages, use `appPath()` from
+`src/lib/paths.js` so they keep working under that base path.
 
 `make deploy` requires an authenticated Firebase CLI with access to the configured project.
 
@@ -50,25 +85,3 @@ make release version=1.4.0        # a leading v and suffixes such as 1.4.0-rc.1 
 `release/frontend-vX.Y.Z.tar.gz` with a `SHA256SUMS` file, pushes the commit and tag together, and
 publishes a GitHub release with those files attached. It requires an authenticated `gh` CLI.
 Deployment is intentionally a separate step: run `make deploy` afterwards.
-
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react)
-  uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc)
-  uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build
-performances. To add it, see
-[this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint
-rules enabled. Check out the
-[TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for
-information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.

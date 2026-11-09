@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "help": "make help",
-    "dev": "vite",
+    "review": "vite --mode review",
     "build": "vite build",
+    "build:prototype": "bash scripts/build-prototype.sh",
     "lint:check": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
     "format:fix": "prettier --write .",

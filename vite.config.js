@@ -3,8 +3,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+// Review mode (`make review`) swaps the API client and Clerk for local mocks so
+// the real pages render with fixture data. These aliases exist only in that
+// mode, so production builds never include src/review/.
+const reviewAliases = [
+  { find: /^@\/lib\/api$/, replacement: path.resolve(__dirname, './src/review/api.js') },
+  { find: /^@clerk\/react$/, replacement: path.resolve(__dirname, './src/review/clerk.jsx') },
+]
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   build: {
     // MapLibre's prebuilt renderer contains one indivisible module just over
@@ -34,8 +42,9 @@ export default defineConfig({
     exclude: ['maplibre-gl'],
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      ...(mode === 'review' ? reviewAliases : []),
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+    ],
   },
-})
+}))
