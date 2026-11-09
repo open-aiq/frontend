@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CloudOff, Loader2, MapPin, ServerCrash } from 'lucide-react'
+import { ArrowLeft, MapPin } from 'lucide-react'
 
 import { PublicHeader } from '@/components/PublicHeader'
 import { HistoryChart } from '@/components/HistoryChart'
-import { StatusBadge } from '@/components/DeviceCard'
+import { DeviceFacts } from '@/components/DeviceFacts'
+import { AqiTile, MetricGroups } from '@/components/readings'
+import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getPublicDevice, getPublicDeviceCurrent, getPublicDeviceHistorical } from '@/lib/api'
-import { aqiInfo } from '@/lib/aqi'
-
-function formattedDate(value) {
-  return value ? new Date(value).toLocaleString() : 'Unknown'
-}
 
 export function PublicDevicePage() {
   const { id } = useParams()
@@ -49,9 +46,8 @@ export function PublicDevicePage() {
     }
   }, [id])
 
-  const info = current ? aqiInfo(current.aqi) : null
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background surface-glow">
       <PublicHeader />
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <Link
@@ -61,14 +57,16 @@ export function PublicDevicePage() {
           <ArrowLeft className="size-4" /> Community map
         </Link>
         {deviceState === 'loading' && (
-          <div className="flex justify-center py-24">
-            <Loader2 className="animate-spin" />
+          <div className="mt-8 p-5 surface-raised">
+            <LoadingState label="Loading this sensor" />
           </div>
         )}
         {deviceState === 'error' && (
-          <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed py-24">
-            <ServerCrash />
-            <p className="font-medium">Public device not found</p>
+          <div className="mt-8 surface-raised">
+            <EmptyState title="We couldn’t find this sensor">
+              Its owner may have stopped sharing it, or the link is out of date. You can find other
+              sensors on the community map.
+            </EmptyState>
           </div>
         )}
         {deviceState === 'ready' && device && (
@@ -81,18 +79,25 @@ export function PublicDevicePage() {
             </header>
             <main className="mt-8 space-y-6">
               {readingState === 'loading' && (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="animate-spin" />
+                <div className="p-5 surface-raised">
+                  <LoadingState
+                    label="Loading readings"
+                    lines={4}
+                  />
                 </div>
               )}
               {readingState === 'nodata' && (
-                <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed py-20 text-muted-foreground">
-                  <CloudOff /> This device has not shared a reading yet.
+                <div className="surface-raised">
+                  <EmptyState title="No readings shared yet">
+                    This sensor hasn’t shared a reading. Check back soon.
+                  </EmptyState>
                 </div>
               )}
               {readingState === 'error' && (
-                <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed py-20 text-muted-foreground">
-                  <ServerCrash /> Couldn’t load readings.
+                <div className="surface-raised">
+                  <ErrorState title="We couldn’t load the readings">
+                    It’s usually a brief hiccup. Refresh the page in a moment.
+                  </ErrorState>
                 </div>
               )}
               {readingState === 'ready' && current && (
@@ -103,38 +108,25 @@ export function PublicDevicePage() {
                       <CardDescription>Averages over the last hour</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="mb-5 flex items-center gap-4">
-                        <StatusBadge status={current.status} />
-                        <span className="text-xs text-muted-foreground">
-                          Last seen {formattedDate(current.last_seen)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-end gap-8">
-                        <div
-                          className="w-fit rounded-2xl px-5 py-4"
-                          style={{ backgroundColor: info.bg, color: info.fg }}
-                        >
-                          <div className="text-6xl font-semibold">{current.aqi}</div>
-                          <div>US AQI · {info.label}</div>
+                      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+                        <div className="grid gap-3">
+                          <AqiTile
+                            aqi={current.aqi}
+                            caption="Averages over the last hour"
+                          />
+                          <DeviceFacts
+                            current={current}
+                            placement={device}
+                          />
                         </div>
-                        <div className="space-y-2 text-sm">
-                          <p>
-                            PM2.5 <strong>{current.pm2_5.toFixed(1)}</strong> µg/m³
-                          </p>
-                          <p>
-                            Temperature <strong>{current.temperature.toFixed(1)}</strong>°C
-                          </p>
-                          <p>
-                            Humidity <strong>{current.humidity.toFixed(0)}</strong>%
-                          </p>
-                        </div>
+                        <MetricGroups current={current} />
                       </div>
                       {current.location && (
                         <Link
                           to={`/map?device=${id}`}
-                          className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:underline"
+                          className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
                         >
-                          <MapPin className="size-4" /> View exact shared location on map
+                          <MapPin className="size-4" /> See it on the map
                         </Link>
                       )}
                     </CardContent>
@@ -151,9 +143,10 @@ export function PublicDevicePage() {
                           timeline="daily"
                         />
                       ) : (
-                        <p className="py-16 text-center text-muted-foreground">
-                          No data for this range.
-                        </p>
+                        <EmptyState
+                          illustration={false}
+                          title="Nothing recorded in the last day"
+                        />
                       )}
                     </CardContent>
                   </Card>

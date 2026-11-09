@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
-import { UserButton } from '@clerk/react'
+import { Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { AppShell } from '@/components/AppShell'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { EmptyState, LoadingState } from '@/components/states'
 import { useApi } from '@/lib/api'
 
 export function DeviceSettingsPage() {
@@ -111,47 +111,61 @@ export function DeviceSettingsPage() {
 
   if (state === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30 text-muted-foreground">
-        <Loader2 className="size-6 animate-spin" />
-      </div>
+      <AppShell
+        backTo={`/app/devices/${id}`}
+        backLabel="Back to the device"
+        title="Device settings"
+      >
+        <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="p-5 surface-raised">
+            <LoadingState label="Loading device settings" />
+          </div>
+        </main>
+      </AppShell>
     )
   }
 
   if (state === 'error') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-muted/30">
-        <p className="font-medium">Device not found</p>
-        <Link
-          to="/app"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Back to devices
-        </Link>
-      </div>
+      <AppShell
+        backTo="/app"
+        backLabel="Back to my monitors"
+        title="Device settings"
+      >
+        <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="surface-raised">
+            <EmptyState
+              title="We couldn’t find this device"
+              action={
+                <Link
+                  to="/app"
+                  className={buttonVariants({ variant: 'outline' })}
+                >
+                  Back to your devices
+                </Link>
+              }
+            >
+              It may have been removed, or the link is out of date.
+            </EmptyState>
+          </div>
+        </main>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <Link
-              to={`/app/devices/${id}`}
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" /> {device.name}
-            </Link>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Device settings</h1>
-            <p className="font-mono text-xs text-muted-foreground">{device.device_id}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <UserButton />
-          </div>
-        </header>
-
-        <main className="mt-8 space-y-6">
+    <AppShell
+      backTo={`/app/devices/${id}`}
+      backLabel={`Back to ${device.name}`}
+      title="Device settings"
+      subtitle={
+        <>
+          {device.name} · <span className="font-mono">{device.device_id}</span>
+        </>
+      }
+    >
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>General</CardTitle>
@@ -221,7 +235,7 @@ export function DeviceSettingsPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-highlight/50 bg-highlight/10 p-4">
                   <div>
                     <Label htmlFor="device-location-public">Share exact location</Label>
                     <p className="text-sm text-muted-foreground">
@@ -294,7 +308,7 @@ export function DeviceSettingsPage() {
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <div className="flex size-10 items-center justify-center rounded-full bg-highlight/20 text-primary">
                 <MapPin className="size-5" />
               </div>
               <DialogTitle>Share this device’s exact location?</DialogTitle>
@@ -304,7 +318,7 @@ export function DeviceSettingsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-muted-foreground">
+            <div className="rounded-lg border border-highlight/50 bg-highlight/10 p-3 text-sm text-muted-foreground">
               Anyone can view and download this location data. Only enable this setting if the
               device owner and people at its location have agreed to share it publicly.
             </div>
@@ -403,6 +417,6 @@ export function DeviceSettingsPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AppShell>
   )
 }

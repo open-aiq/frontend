@@ -1,10 +1,8 @@
 import { useAuth } from '@clerk/react'
 import { useMemo } from 'react'
 
-const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
-  /\/+$/,
-  '',
-)
+// Set per build in .env.production; there's no local-backend fallback.
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
 
 export class ApiError extends Error {
   constructor(status, body = {}) {
@@ -30,6 +28,7 @@ export function apiErrorFromBody(status, body) {
 }
 
 async function request(path, options = {}, getToken) {
+  if (!BASE_URL) throw new Error('Missing VITE_API_URL')
   const token = getToken ? await getToken() : null
   const headers = { ...options.headers }
   // Avoid preflighting body-less GET requests. Only advertise JSON when a
