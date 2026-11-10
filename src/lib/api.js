@@ -72,6 +72,9 @@ export function useApi() {
             getToken,
           )
         ).data ?? [],
+      // Deletes every monitor you own (with its readings, logs and updates),
+      // then your sign-in. Answers 204 No Content.
+      deleteAccount: async () => request('/account', { method: 'DELETE' }, getToken),
     }),
     [getToken],
   )

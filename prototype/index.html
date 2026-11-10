@@ -129,6 +129,7 @@
         box-shadow: var(--shadow-rest);
       }
       .switch button:focus-visible,
+      .screen select:focus-visible,
       .open:focus-visible,
       .mark:focus-visible {
         outline: 3px solid color-mix(in srgb, var(--ring) 50%, transparent);
@@ -137,6 +138,50 @@
       .switch svg {
         width: 16px;
         height: 16px;
+      }
+
+      /* The Screen picker: a native select dressed as a pill next to the switch. */
+      .screen {
+        position: relative;
+        flex: none;
+        min-width: 0;
+      }
+      .screen select {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 100%;
+        max-width: 240px;
+        height: 38px;
+        padding: 0 34px 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--muted);
+        color: var(--foreground);
+        font: inherit;
+        font-size: 14px;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .screen select:hover {
+        background: color-mix(in srgb, var(--muted), var(--foreground) 6%);
+      }
+      .screen option {
+        background: var(--popover);
+        color: var(--popover-foreground);
+      }
+      .screen svg {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        width: 16px;
+        height: 16px;
+        transform: translateY(-50%);
+        color: var(--muted-foreground);
+        pointer-events: none;
+      }
+      :root.dark {
+        color-scheme: dark;
       }
 
       .open {
@@ -206,11 +251,28 @@
       }
 
       @media (max-width: 560px) {
+        .bar {
+          gap: 8px;
+          padding: 0 12px;
+        }
         .switch button span {
           display: none;
         }
-        .title p {
-          display: none;
+        /* The picker needs the room more than the title, which stays for
+           screen readers. */
+        .title {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
+        }
+        .screen {
+          flex: 1;
+        }
+        .screen select {
+          max-width: none;
         }
         .view.mobile {
           padding: 0;
@@ -228,7 +290,8 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .switch button {
+        .switch button,
+        .screen select {
           transition: none;
         }
       }
@@ -242,26 +305,21 @@
         aria-label="Open AIQ home"
         title="Open AIQ home"
       >
+        <!-- lucide's Wind (ISC licence), the same mark as the dashboard header. -->
         <svg
           viewBox="0 0 24 24"
-          width="22"
-          height="22"
+          width="20"
+          height="20"
           fill="none"
           stroke="currentColor"
-          stroke-width="1.8"
+          stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
           aria-hidden="true"
         >
-          <rect
-            x="3"
-            y="4.5"
-            width="18"
-            height="15"
-            rx="4.5"
-          />
-          <path d="M9.5 10.5v.01M14.5 10.5v.01" />
-          <path d="M9.5 13.5q2.5 2 5 0" />
+          <path d="M12.8 19.6A2 2 0 1 0 14 16H2" />
+          <path d="M17.5 8a2.5 2.5 0 1 1 2 4H2" />
+          <path d="M9.8 4.4A2 2 0 1 1 11 8H2" />
         </svg>
       </a>
       <div class="title">
@@ -328,6 +386,24 @@
           <span>Mobile</span>
         </button>
       </div>
+      <div class="screen">
+        <select
+          id="screen"
+          aria-label="Screen"
+          title="Screen"
+        ></select>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
       <a
         class="open"
         id="open-full"
@@ -370,32 +446,146 @@
     </main>
 
     <script>
-      // One switch flips between the two prototypes. Each loads the first time
+      // One switch flips between the two prototypes, and the Screen picker
+      // opens a page inside the active one. Each prototype loads the first time
       // you open it and keeps its place when you switch away and back.
-      const SOURCES = { web: 'web/app', mobile: 'mobile/' }
-      const buttons = document.querySelectorAll('.switch button')
-      const openFull = document.getElementById('open-full')
+      //
+      // The hash keeps your place in links: #web and #mobile (the docs link to
+      // these), or #web/<screen> and #mobile/<screen>, e.g. #mobile/account.
+      const SCREENS = {
+        web: [
+          { key: 'dashboard', label: 'Dashboard', src: 'web/app' },
+          { key: 'monitor', label: 'Monitor', src: 'web/app/devices/dev-garden' },
+          { key: 'monitor-new', label: 'Monitor (no readings)', src: 'web/app/devices/dev-new' },
+          {
+            key: 'monitor-settings',
+            label: 'Monitor settings',
+            src: 'web/app/devices/dev-garden/settings',
+          },
+          { key: 'account', label: 'Account', src: 'web/app/account' },
+          { key: 'landing', label: 'Landing', src: 'web/' },
+          { key: 'map', label: 'Map', src: 'web/map' },
+          { key: 'public-monitor', label: 'Public monitor', src: 'web/devices/dev-balcony' },
+          { key: 'sign-in', label: 'Sign in', src: 'web/sign-in' },
+          { key: 'playground', label: 'Playground', src: 'web/playground' },
+        ],
+        // The app's gallery reads ?screen=<key> to pick its first screen.
+        mobile: [
+          ['gallery', 'Gallery'],
+          ['monitors', 'Monitors'],
+          ['monitor', 'Monitor'],
+          ['monitor-new', 'Monitor (no readings)'],
+          ['monitor-logs', 'Logs'],
+          ['monitor-settings', 'Monitor settings'],
+          ['settings', 'App settings'],
+          ['account', 'Account'],
+        ].map(([key, label]) => ({ key, label, src: `mobile/?screen=${key}` })),
+      }
+      const TITLES = { web: 'Web dashboard prototype', mobile: 'Mobile app prototype' }
+      const WEB_BASE = new URL('web/', location.href).pathname
 
-      function show(view) {
-        if (!SOURCES[view]) view = 'web'
+      const buttons = document.querySelectorAll('.switch button')
+      const picker = document.getElementById('screen')
+      const openFull = document.getElementById('open-full')
+      // Each platform starts on its first screen. After that, `loaded` holds
+      // the screen its frame shows (null for a page that isn't in the list),
+      // so switching platforms never reloads a frame.
+      const DEFAULTS = { web: 'dashboard', mobile: 'gallery' }
+      const loaded = { web: null, mobile: null }
+      const frames = {}
+      let active = null
+
+      const screenFor = (view, key) => SCREENS[view].find((screen) => screen.key === key)
+
+      // The web prototype's scenario (?scenario=), so a new screen keeps it.
+      function webScenario() {
+        try {
+          return new URL(frames.web.contentWindow.location.href).searchParams.get('scenario')
+        } catch {
+          return null
+        }
+      }
+
+      function srcFor(view, key) {
+        const { src } = screenFor(view, key)
+        const scenario = view === 'web' && frames.web ? webScenario() : null
+        return scenario ? `${src}?scenario=${encodeURIComponent(scenario)}` : src
+      }
+
+      function fillPicker(view) {
+        // Shown when you've followed a link to a page that isn't listed.
+        const other = new Option('Another page', '')
+        other.disabled = true
+        other.hidden = true
+        picker.replaceChildren(
+          ...SCREENS[view].map(({ key, label }) => new Option(label, key)),
+          other,
+        )
+      }
+
+      function reflect(view, href) {
+        picker.value = loaded[view] ?? ''
+        openFull.href = href
+        const hash = loaded[view] ? `#${view}/${loaded[view]}` : `#${view}`
+        if (location.hash !== hash) history.replaceState(null, '', hash)
+      }
+
+      // When you follow a link inside the web prototype, the picker follows.
+      function syncFromWebFrame() {
+        let url
+        try {
+          url = new URL(frames.web.contentWindow.location.href)
+        } catch {
+          return
+        }
+        if (url.protocol === 'about:') return
+        const path = url.pathname.startsWith(WEB_BASE) ? url.pathname.slice(WEB_BASE.length) : null
+        const screen = SCREENS.web.find((item) => item.src === `web/${path}`)
+        loaded.web = screen?.key ?? null
+        if (active === 'web') reflect('web', url.href)
+      }
+
+      // Show a platform, and a screen on it when `key` names one. Without a
+      // screen, the platform keeps whatever its frame is showing.
+      function show(view, key) {
+        if (!SCREENS[view]) view = 'web'
+        if (!screenFor(view, key)) key = null
+
         for (const button of buttons) {
           const checked = button.dataset.view === view
           button.setAttribute('aria-checked', String(checked))
           button.tabIndex = checked ? 0 : -1
         }
         for (const section of document.querySelectorAll('.view')) {
-          const active = section.dataset.view === view
-          section.hidden = !active
-          const host = section.querySelector('.phone') ?? section
-          if (active && !host.querySelector('iframe')) {
-            const frame = document.createElement('iframe')
-            frame.src = SOURCES[view]
-            frame.title = view === 'web' ? 'Web dashboard prototype' : 'Mobile app prototype'
-            host.append(frame)
-          }
+          section.hidden = section.dataset.view !== view
         }
-        openFull.href = SOURCES[view]
-        if (location.hash !== `#${view}`) history.replaceState(null, '', `#${view}`)
+
+        const fresh = !frames[view]
+        if (fresh) {
+          frames[view] = document.createElement('iframe')
+          frames[view].title = TITLES[view]
+        }
+        if (key ? key !== loaded[view] : fresh) {
+          key ??= DEFAULTS[view]
+          frames[view].src = srcFor(view, key)
+          loaded[view] = key
+        }
+        if (fresh) {
+          // Attach after setting src, so the frame never loads a blank page.
+          const section = document.querySelector(`.view[data-view="${view}"]`)
+          const host = section.querySelector('.phone') ?? section
+          if (view === 'web') frames.web.addEventListener('load', syncFromWebFrame)
+          host.append(frames[view])
+        }
+
+        if (active !== view) fillPicker(view)
+        active = view
+        reflect(view, frames[view].getAttribute('src'))
+      }
+
+      function showHash() {
+        const [view, key] = location.hash.slice(1).split('/')
+        show(view, key)
       }
 
       for (const button of buttons) {
@@ -407,8 +597,17 @@
           show(other.dataset.view)
         })
       }
-      window.addEventListener('hashchange', () => show(location.hash.slice(1)))
-      show(location.hash.slice(1))
+      picker.addEventListener('change', () => show(active, picker.value))
+      // Open what you're looking at, even after following links inside it.
+      openFull.addEventListener('click', () => {
+        try {
+          openFull.href = frames[active].contentWindow.location.href
+        } catch {
+          /* not loaded yet, or another origin: keep the picked screen */
+        }
+      })
+      window.addEventListener('hashchange', showHash)
+      showHash()
     </script>
   </body>
 </html>
