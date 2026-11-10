@@ -108,24 +108,38 @@ export function hasReadings(id) {
   return SEEDS.find((seed) => seed.id === id)?.aqi != null
 }
 
-export function makeCurrent(id, { offline = false } = {}) {
-  const seed = SEEDS.find((item) => item.id === id)
-  if (!seed || seed.aqi == null) return null
-  const isOffline = offline || seed.offline
+// How long an offline review monitor has been quiet.
+const OFFLINE_FOR = 3 * HOUR + 12 * MINUTE
+
+// seedMetrics is a seed's last real reading.
+function seedMetrics(seed) {
   const pm25 = pm25ForAqi(seed.aqi)
   const temperature = seed.outdoor ? 18.4 + (seed.aqi % 7) : 22.1
-  const humidity = seed.outdoor ? 64 : 46
   return {
     aqi: seed.aqi,
     pm1_0: pm25 * 0.68,
     pm2_5: pm25,
     pm10_0: pm25 * 1.42,
     temperature,
-    humidity,
+    humidity: seed.outdoor ? 64 : 46,
     heat_index: temperature + 0.6,
+  }
+}
+
+export function makeCurrent(id, { offline = false } = {}) {
+  const seed = SEEDS.find((item) => item.id === id)
+  if (!seed || seed.aqi == null) return null
+  const isOffline = offline || seed.offline
+  // Silent for over an hour, the backend has nothing to average: it answers
+  // with every metric at zero and `sample_count: 0`.
+  const metrics = isOffline
+    ? { aqi: 0, pm1_0: 0, pm2_5: 0, pm10_0: 0, temperature: 0, humidity: 0, heat_index: 0 }
+    : seedMetrics(seed)
+  return {
+    ...metrics,
     status: isOffline ? 'offline' : 'online',
-    last_seen: iso(Date.now() - (isOffline ? 3 * HOUR + 12 * MINUTE : 2 * MINUTE)),
-    sample_count: isOffline ? 4 : 58,
+    last_seen: iso(Date.now() - (isOffline ? OFFLINE_FOR : 2 * MINUTE)),
+    sample_count: isOffline ? 0 : 58,
     location: seed.location ? { lat: seed.lat, lon: seed.lon, provider: 'phone' } : null,
   }
 }
@@ -178,18 +192,21 @@ export function makePublicDevice(id) {
 
 export function makeMapDevices({ offline = false } = {}) {
   return SEEDS.filter((seed) => seed.public && seed.location && seed.aqi != null).map((seed) => {
-    const current = makeCurrent(seed.id, { offline })
+    // The map endpoint keeps a monitor's last complete reading, so an offline
+    // one still has real numbers here, unlike its zeroed current reading.
+    const isOffline = offline || seed.offline
+    const last = seedMetrics(seed)
     return {
       id: seed.id,
       name: seed.name,
       lat: seed.lat,
       lon: seed.lon,
       is_outdoor: seed.outdoor,
-      status: current.status,
-      aqi: current.aqi,
-      pm2_5: current.pm2_5,
-      temperature: current.temperature,
-      measured_at: current.last_seen,
+      status: isOffline ? 'offline' : 'online',
+      aqi: last.aqi,
+      pm2_5: last.pm2_5,
+      temperature: last.temperature,
+      measured_at: iso(Date.now() - (isOffline ? OFFLINE_FOR : 2 * MINUTE)),
     }
   })
 }
