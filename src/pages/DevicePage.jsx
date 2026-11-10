@@ -5,10 +5,8 @@ import { Settings } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { DeviceFlags } from '@/components/DeviceCard'
-import { DeviceFacts } from '@/components/DeviceFacts'
 import { HistoryChart } from '@/components/HistoryChart'
-import { AqiTile, MetricGroups } from '@/components/readings'
+import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState } from '@/components/states'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApi } from '@/lib/api'
@@ -106,16 +104,11 @@ export function DevicePage() {
         )
       }
       subtitle={
-        deviceState === 'ready' && device ? (
-          <span className="font-mono">{device.device_id}</span>
-        ) : deviceState === 'error' ? (
-          'It may have been removed, or the link is out of date.'
-        ) : null
+        deviceState === 'error' ? 'It may have been removed, or the link is out of date.' : null
       }
     >
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {deviceState === 'ready' && device ? <DeviceFlags device={device} /> : <span />}
+        <div className="flex justify-end">
           <Button
             variant="outline"
             onClick={() => navigate(`/app/devices/${id}/settings`)}
@@ -130,16 +123,7 @@ export function DevicePage() {
             <CardDescription>Averages over the last hour</CardDescription>
           </CardHeader>
           <CardContent>
-            {currentState === 'loading' && (
-              <div
-                className="grid gap-4 md:grid-cols-2 md:items-start"
-                aria-busy="true"
-              >
-                <span className="sr-only">Loading current readings…</span>
-                <AqiTile loading />
-                <MetricGroups loading />
-              </div>
-            )}
+            {currentState === 'loading' && <MonitorReadings loading />}
 
             {currentState === 'nodata' && (
               <EmptyState title="Waiting for the first reading">
@@ -159,19 +143,10 @@ export function DevicePage() {
 
             {currentState === 'ready' && current && (
               <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2 md:items-start">
-                  <div className="grid gap-3">
-                    <AqiTile
-                      aqi={current.aqi}
-                      caption="Averages over the last hour"
-                    />
-                    <DeviceFacts
-                      current={current}
-                      device={device}
-                    />
-                  </div>
-                  <MetricGroups current={current} />
-                </div>
+                <MonitorReadings
+                  current={current}
+                  device={device}
+                />
 
                 <p className="text-xs text-muted-foreground">
                   Based on {current.sample_count} sample{current.sample_count === 1 ? '' : 's'} in

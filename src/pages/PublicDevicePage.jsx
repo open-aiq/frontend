@@ -4,8 +4,7 @@ import { ArrowLeft, MapPin } from 'lucide-react'
 
 import { PublicHeader } from '@/components/PublicHeader'
 import { HistoryChart } from '@/components/HistoryChart'
-import { DeviceFacts } from '@/components/DeviceFacts'
-import { AqiTile, MetricGroups } from '@/components/readings'
+import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getPublicDevice, getPublicDeviceCurrent, getPublicDeviceHistorical } from '@/lib/api'
@@ -108,19 +107,10 @@ export function PublicDevicePage() {
                       <CardDescription>Averages over the last hour</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid gap-4 md:grid-cols-2 md:items-start">
-                        <div className="grid gap-3">
-                          <AqiTile
-                            aqi={current.aqi}
-                            caption="Averages over the last hour"
-                          />
-                          <DeviceFacts
-                            current={current}
-                            placement={device}
-                          />
-                        </div>
-                        <MetricGroups current={current} />
-                      </div>
+                      <MonitorReadings
+                        current={current}
+                        placement={device}
+                      />
                       {current.location && (
                         <Link
                           to={`/map?device=${id}`}
