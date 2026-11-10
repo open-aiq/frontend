@@ -83,6 +83,11 @@ export function useApi() {
           devices = devices.filter((device) => device.id !== id)
           return null
         }),
+      deleteAccount: () =>
+        respond(() => {
+          devices = []
+          return null
+        }),
       getDeviceCurrent: (id) => respond(() => current(id)),
       getDeviceHistorical: (id, timeline) => respond(() => history(id, timeline)),
     }),

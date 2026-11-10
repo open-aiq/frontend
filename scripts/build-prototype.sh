@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Build the hosted prototype into dist/prototype/, served at /prototype/:
 #
-#   dist/prototype/index.html  the page with the Web | Mobile switch
+#   dist/prototype/index.html  the page with the Web | Mobile switch and the
+#                              Screen picker (#web/<screen>, #mobile/<screen>)
 #   dist/prototype/web/        the dashboard in review mode (mock data, no sign-in)
-#   dist/prototype/mobile/     the app's gallery, built for the web from ../app
+#   dist/prototype/mobile/     the app's gallery and its screens on mock data
+#                              (?screen=<key>), built for the web from ../app
 #
 # Run it after `npm run build`, which empties dist/.
 set -euo pipefail

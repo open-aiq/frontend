@@ -16,6 +16,7 @@ const ROUTES = [
   ['/app/devices/dev-garden', 'Device'],
   ['/app/devices/dev-new', 'Device (no readings)'],
   ['/app/devices/dev-garden/settings', 'Settings'],
+  ['/app/account', 'Account'],
   ['/sign-in', 'Sign in'],
 ]
 

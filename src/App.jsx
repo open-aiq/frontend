@@ -5,6 +5,9 @@ import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-do
 import { MonitorIllustration } from '@/components/MonitorIllustration'
 import { Toaster } from '@/components/ui/sonner'
 
+const AccountPage = lazy(() =>
+  import('@/pages/AccountPage').then(({ AccountPage }) => ({ default: AccountPage })),
+)
 const Dashboard = lazy(() =>
   import('@/pages/Dashboard').then(({ Dashboard }) => ({ default: Dashboard })),
 )
@@ -134,6 +137,14 @@ export default function App() {
             element={
               <Private>
                 <Dashboard />
+              </Private>
+            }
+          />
+          <Route
+            path="/app/account"
+            element={
+              <Private>
+                <AccountPage />
               </Private>
             }
           />

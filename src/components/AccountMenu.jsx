@@ -10,7 +10,9 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { Link } from 'react-router-dom'
 
+import { Avatar, displayName } from '@/components/Avatar'
 import { GitHubIcon } from '@/components/GitHubIcon'
 import { THEME_MODES } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
@@ -53,12 +55,12 @@ export function AccountMenu() {
 
 function SignedInMenu() {
   const { user } = useUser()
-  const { openUserProfile, signOut } = useClerk()
+  const { signOut } = useClerk()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
   const email = user?.primaryEmailAddress?.emailAddress
-  const name = user?.fullName || user?.username || email || 'Your account'
+  const name = displayName(user)
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -104,7 +106,7 @@ function SignedInMenu() {
           <DropdownMenuSeparator />
           <ThemeRow />
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openUserProfile()}>
+          <DropdownMenuItem render={<Link to="/app/account" />}>
             <UserRound /> Manage account
           </DropdownMenuItem>
           <MenuLink href={DOCUMENTATION_URL}>
@@ -206,32 +208,5 @@ function MenuLink({ href, children }) {
       {children}
       <ExternalLink className="ml-auto size-3.5 text-muted-foreground" />
     </DropdownMenuItem>
-  )
-}
-
-function Avatar({ imageUrl, name, className }) {
-  const initials = name
-    .split(/[\s@.]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join('')
-  return (
-    <span
-      className={cn(
-        'grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-xs font-semibold text-secondary-foreground',
-        className,
-      )}
-    >
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt=""
-          className="size-full object-cover"
-        />
-      ) : (
-        initials
-      )}
-    </span>
   )
 }
