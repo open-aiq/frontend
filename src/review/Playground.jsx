@@ -1,6 +1,6 @@
 import { MonitorCard } from '@/components/MonitorCard'
 import { MonitorIllustration } from '@/components/MonitorIllustration'
-import { AqiBlock, AqiTile, MetricGroups } from '@/components/readings'
+import { AqiBlock, MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { makeCurrent, makeDevices } from './fixtures.js'
@@ -91,18 +91,12 @@ export function Playground() {
         </Section>
 
         <Section title="Inside the monitor">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="grid content-start gap-3">
-              <AqiTile
-                aqi={kitchen.aqi}
-                caption="Averages over the last hour"
-              />
-              <MetricGroups current={kitchen} />
-            </div>
-            <div className="grid content-start gap-3">
-              <AqiTile loading />
-              <MetricGroups loading />
-            </div>
+          <div className="grid gap-8">
+            <MonitorReadings
+              current={kitchen}
+              device={byId['dev-kitchen']}
+            />
+            <MonitorReadings loading />
           </div>
         </Section>
 

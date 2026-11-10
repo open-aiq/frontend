@@ -1,6 +1,27 @@
-import { OfflineIcon, OnlineIcon } from '@/components/icons.g'
-import { deviceFlags } from '@/components/DeviceCard'
+import {
+  IndoorIcon,
+  OfflineIcon,
+  OnlineIcon,
+  OutdoorIcon,
+  PrivateIcon,
+  PublicIcon,
+} from '@/components/icons.g'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+
+// deviceFlags describes a device's visibility and placement: icon, label, and
+// a short description.
+export function deviceFlags(device) {
+  return [
+    device.is_public
+      ? { icon: PublicIcon, label: 'Public', description: 'Readings are shared publicly' }
+      : { icon: PrivateIcon, label: 'Private', description: 'Readings are visible only to you' },
+    device.is_outdoor
+      ? { icon: OutdoorIcon, label: 'Outdoor', description: 'Sensor is installed outdoors' }
+      : { icon: IndoorIcon, label: 'Indoor', description: 'Sensor is installed indoors' },
+  ]
+}
 
 function formatLastSeen(value) {
   if (!value) return 'Not seen yet'
@@ -14,42 +35,72 @@ function formatLastSeen(value) {
   })}`
 }
 
-// DeviceFacts sits under the AQI tile inside a monitor: whether it's online
-// and when we last heard from it, then (when `device` is given) whether its
-// readings are shared and where it's installed. Pass `placement` alone for
-// public pages, where sharing is a given.
-export function DeviceFacts({ current, device, placement, className }) {
+// DeviceFacts is the row of bubbles under the readings inside a monitor, each
+// with one word underneath: whether it's online, then (when `device` is given)
+// whether its readings are shared and where it's installed. Pass `placement`
+// alone for public pages, where sharing is a given. Hovering or focusing a
+// bubble explains it; screen readers hear the word and the explanation. Pass
+// `loading` with a `count` for placeholders while the reading loads.
+export function DeviceFacts({ current, device, placement, loading = false, count = 3, className }) {
+  if (loading) {
+    return (
+      <div
+        className={cn('flex justify-center gap-6', className)}
+        aria-hidden="true"
+      >
+        {Array.from({ length: count }, (_, index) => (
+          <div
+            key={index}
+            className="grid justify-items-center gap-1.5"
+          >
+            <Skeleton className="size-10 rounded-full" />
+            <Skeleton className="h-3 w-12 rounded-full" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const online = current?.status === 'online'
-  const rows = [
+  const facts = [
     {
       icon: online ? OnlineIcon : OfflineIcon,
       label: online ? 'Online' : 'Offline',
       description: formatLastSeen(current?.last_seen),
-      tone: online ? 'text-online' : 'text-muted-foreground',
+      tone: online ? 'text-online' : undefined,
     },
   ]
-  if (device) rows.push(...deviceFlags(device))
-  else if (placement) rows.push(...deviceFlags(placement).slice(1))
+  if (device) facts.push(...deviceFlags(device))
+  else if (placement) facts.push(...deviceFlags(placement).slice(1))
 
   return (
     <ul
-      className={cn(
-        'divide-y divide-border rounded-[1.25rem] border bg-card px-4 text-card-foreground',
-        className,
-      )}
+      aria-label="About this monitor"
+      className={cn('flex flex-wrap justify-center gap-6', className)}
     >
-      {rows.map(({ icon: Icon, label, description, tone }) => (
-        <li
-          key={label}
-          className="flex items-center gap-3 py-3"
-        >
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
-            <Icon className="size-5" />
-          </span>
-          <span className="min-w-0">
-            <span className={cn('block font-medium', tone)}>{label}</span>
-            <span className="block text-xs text-muted-foreground">{description}</span>
-          </span>
+      {facts.map(({ icon: Icon, label, description, tone }) => (
+        <li key={label}>
+          <Tooltip>
+            <TooltipTrigger
+              aria-label={`${label}. ${description}`}
+              className="group grid justify-items-center gap-1.5 rounded-2xl px-1.5 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <span
+                className={cn(
+                  'grid size-10 place-items-center rounded-full bg-secondary text-secondary-foreground transition-colors group-hover:bg-secondary/80',
+                  tone,
+                )}
+              >
+                <Icon className="size-5" />
+              </span>
+              <span
+                className={cn('text-xs', tone ? `font-medium ${tone}` : 'text-muted-foreground')}
+              >
+                {label}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{description}</TooltipContent>
+          </Tooltip>
         </li>
       ))}
     </ul>

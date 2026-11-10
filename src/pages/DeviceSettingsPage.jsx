@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
+import { Check, Copy, Loader2, MapPin, Trash2, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { AppShell } from '@/components/AppShell'
@@ -37,6 +37,7 @@ export function DeviceSettingsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [nameError, setNameError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   // There is no GET /devices/{id}; resolve the device from the list.
   const loadDevice = useCallback(async () => {
@@ -103,6 +104,17 @@ export function DeviceSettingsPage() {
     }
   }
 
+  async function copyDeviceId() {
+    try {
+      await navigator.clipboard.writeText(device.device_id)
+      setCopied(true)
+      toast.success('Device ID copied')
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('We couldn’t copy it. Select the ID and copy it by hand.')
+    }
+  }
+
   function handleDeleteDialogChange(open) {
     if (deleting) return
     setDeleteDialogOpen(open)
@@ -158,18 +170,14 @@ export function DeviceSettingsPage() {
       backTo={`/app/devices/${id}`}
       backLabel={`Back to ${device.name}`}
       title="Device settings"
-      subtitle={
-        <>
-          {device.name} · <span className="font-mono">{device.device_id}</span>
-        </>
-      }
+      subtitle={device.name}
     >
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <main className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>General</CardTitle>
-              <CardDescription>Name and visibility of this device.</CardDescription>
+              <CardDescription>Name, ID and visibility of this device.</CardDescription>
             </CardHeader>
             <CardContent>
               <form
@@ -199,6 +207,28 @@ export function DeviceSettingsPage() {
                       {nameError}
                     </p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm leading-none font-medium">Device ID</p>
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/40 py-1 pr-1 pl-2.5">
+                    <code className="min-w-0 flex-1 font-mono text-sm break-all">
+                      {device.device_id}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={copyDeviceId}
+                      aria-label="Copy device ID"
+                      title="Copy device ID"
+                    >
+                      {copied ? <Check /> : <Copy />}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    How your monitor identifies itself. It’s handy when you’re asking for help.
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
