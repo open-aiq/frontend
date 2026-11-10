@@ -37,9 +37,9 @@ view inside a monitor (`readings.jsx`) and the shared states (`states.jsx`). In 
 hard-coded colors.
 
 Signed-in pages share one top bar, `AppShell.jsx`, to match the app's `AiqAppBar`. It shows a back
-link or the monitor mark, the title, an optional status chip and the avatar menu
-(`AccountMenu.jsx`). The theme, account, links and sign out all live in that menu, so keep the bar
-itself that simple. The visual playground page describes the full shell.
+link or the wind mark, the title, an optional status chip and the avatar menu (`AccountMenu.jsx`).
+The theme, account, links and sign out all live in that menu, so keep the bar itself that simple.
+The visual playground page describes the full shell.
 
 ## Development, deployments and releases
 

@@ -1,11 +1,10 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Wind } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { AccountMenu } from '@/components/AccountMenu'
-import { MonitorGlyph } from '@/components/MonitorIllustration'
 
 // The one top bar for signed-in pages, matching the app's AiqAppBar: a round
-// back link (or the monitor mark on the first page), a title with an optional
+// back link (or the wind mark on the first page), a title with an optional
 // subtitle, an optional status chip, and the avatar menu at the far right.
 // Nothing else goes in the bar; links and the theme live in the avatar menu.
 export function AppShell({ title, subtitle, backTo, backLabel = 'Back', chip, children }) {
@@ -28,7 +27,7 @@ export function AppShell({ title, subtitle, backTo, backLabel = 'Back', chip, ch
               aria-label="Open AIQ, my monitors"
               className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <MonitorGlyph />
+              <Wind className="size-5" />
             </Link>
           )}
           <div className="min-w-0 flex-1">

@@ -74,29 +74,3 @@ export function MonitorIllustration({ label, className, animated = true }) {
     </svg>
   )
 }
-
-// MonitorGlyph is the monitor as a 24px line icon, used for the brand mark.
-export function MonitorGlyph({ className }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn('size-5', className)}
-      aria-hidden="true"
-    >
-      <rect
-        x="3"
-        y="4.5"
-        width="18"
-        height="15"
-        rx="4.5"
-      />
-      <path d="M9.5 10.5v.01M14.5 10.5v.01" />
-      <path d="M9.5 13.5q2.5 2 5 0" />
-    </svg>
-  )
-}

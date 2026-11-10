@@ -1,8 +1,7 @@
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Wind } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { GitHubIcon } from '@/components/GitHubIcon'
-import { MonitorGlyph } from '@/components/MonitorIllustration'
 import { buttonVariants } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { DOCUMENTATION_URL, ORGANIZATION_URL } from '@/config'
@@ -26,7 +25,7 @@ export function PublicHeader({ overlay = false }) {
           className="flex items-center gap-2 font-semibold tracking-tight"
         >
           <span className="grid size-9 place-items-center rounded-full bg-secondary text-secondary-foreground">
-            <MonitorGlyph />
+            <Wind className="size-5" />
           </span>
           Open AIQ
         </Link>
