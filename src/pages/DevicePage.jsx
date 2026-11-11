@@ -175,6 +175,7 @@ export function DevicePage() {
                     key={value}
                     size="sm"
                     variant={timeline === value ? 'secondary' : 'ghost'}
+                    aria-pressed={timeline === value}
                     onClick={() => setTimeline(value)}
                   >
                     {label}
@@ -187,6 +188,7 @@ export function DevicePage() {
                     key={key}
                     size="sm"
                     variant={metricKey === key ? 'secondary' : 'ghost'}
+                    aria-pressed={metricKey === key}
                     onClick={() => setMetricKey(key)}
                   >
                     {label}
