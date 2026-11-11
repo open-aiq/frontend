@@ -6,14 +6,13 @@ const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
 
 export class ApiError extends Error {
   constructor(status, body = {}) {
-    const message =
-      body.detail || body.details || body.title || body.error || `Request failed (${status})`
+    const message = body.detail || body.title || `Request failed (${status})`
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.type = body.type ?? null
     this.title = body.title ?? null
-    this.detail = body.detail ?? body.details ?? null
+    this.detail = body.detail ?? null
     this.instance = body.instance ?? null
     this.errors = Array.isArray(body.errors) ? body.errors : []
   }
