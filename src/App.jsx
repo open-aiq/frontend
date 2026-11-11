@@ -22,6 +22,9 @@ const DeviceSettingsPage = lazy(() =>
 const LandingPage = lazy(() =>
   import('@/pages/LandingPage').then(({ LandingPage }) => ({ default: LandingPage })),
 )
+const NotFoundPage = lazy(() =>
+  import('@/pages/NotFoundPage').then(({ NotFoundPage }) => ({ default: NotFoundPage })),
+)
 const PublicDevicePage = lazy(() =>
   import('@/pages/PublicDevicePage').then(({ PublicDevicePage }) => ({
     default: PublicDevicePage,
@@ -163,6 +166,10 @@ export default function App() {
                 <DeviceSettingsPage />
               </Private>
             }
+          />
+          <Route
+            path="*"
+            element={<NotFoundPage />}
           />
         </Routes>
       </Suspense>
