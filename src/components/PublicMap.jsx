@@ -34,32 +34,24 @@ function styleUrl() {
   return import.meta.env.VITE_MAP_STYLE_URL || OPENFREEMAP_STYLE
 }
 
-// A MapLibre step expression that colors each device by its AQI band.
-function colorExpression(property) {
+// A MapLibre step expression that picks a value per AQI band. The breakpoints
+// come from BANDS, so the map can't drift from the band tokens.
+function bandExpression(property, pick) {
   return [
     'step',
     ['get', property],
-    BANDS[0].bg,
-    ...BANDS.slice(1).flatMap((band, index) => [BANDS[index].max + 1, band.bg]),
+    pick(BANDS[0], 0),
+    ...BANDS.slice(1).flatMap((band, index) => [BANDS[index].max + 1, pick(band, index + 1)]),
   ]
 }
 
+// Colors each device by its AQI band.
+function colorExpression(property) {
+  return bandExpression(property, (band) => band.bg)
+}
+
 function iconExpression(property) {
-  return [
-    'step',
-    ['get', property],
-    'device-0',
-    51,
-    'device-1',
-    101,
-    'device-2',
-    151,
-    'device-3',
-    201,
-    'device-4',
-    301,
-    'device-5',
-  ]
+  return bandExpression(property, (_band, index) => `device-${index}`)
 }
 
 function deviceIcon(color) {
