@@ -348,6 +348,7 @@ export function PublicMap({
         <div
           ref={containerRef}
           className="h-full w-full"
+          role="region"
           aria-label="Map of public Open AIQ sensors"
         />
       </div>
