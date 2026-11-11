@@ -3,6 +3,7 @@ import { Eye, X } from 'lucide-react'
 
 import { appPath } from '@/lib/paths'
 
+import { DEVICE_IDS, MISSING_DEVICE_ID } from './fixtures.js'
 import { SCENARIOS, getScenario, setScenario } from './scenario.js'
 
 // Every route, with a device that exercises the most states.
@@ -10,12 +11,14 @@ const ROUTES = [
   ['/playground', 'Playground'],
   ['/', 'Landing'],
   ['/map', 'Map'],
-  ['/devices/dev-balcony', 'Public device'],
-  ['/devices/dev-missing', 'Public device (missing)'],
+  [`/devices/${DEVICE_IDS.balcony}`, 'Public device'],
+  [`/devices/${MISSING_DEVICE_ID}`, 'Public device (missing)'],
   ['/app', 'Dashboard'],
-  ['/app/devices/dev-garden', 'Device'],
-  ['/app/devices/dev-new', 'Device (no readings)'],
-  ['/app/devices/dev-garden/settings', 'Settings'],
+  [`/app/devices/${DEVICE_IDS.garden}`, 'Device'],
+  [`/app/devices/${DEVICE_IDS.new}`, 'Device (no readings)'],
+  [`/app/devices/${MISSING_DEVICE_ID}`, 'Device (missing)'],
+  ['/nowhere', 'Not found'],
+  [`/app/devices/${DEVICE_IDS.garden}/settings`, 'Settings'],
   ['/app/account', 'Account'],
   ['/sign-in', 'Sign in'],
 ]

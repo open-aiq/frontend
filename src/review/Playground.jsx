@@ -3,7 +3,7 @@ import { MonitorIllustration } from '@/components/MonitorIllustration'
 import { AqiBlock, MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { makeCurrent, makeDevices } from './fixtures.js'
+import { DEVICE_IDS, makeCurrent, makeDevices } from './fixtures.js'
 
 // The web side of the visual playground. It shows the same sections, in the
 // same order, as the docs page (Contribute > Visual playground) and the app's
@@ -37,9 +37,9 @@ function Section({ title, children }) {
 export function Playground() {
   const devices = makeDevices()
   const byId = Object.fromEntries(devices.map((device) => [device.id, device]))
-  const garden = makeCurrent('dev-garden')
-  const kitchen = makeCurrent('dev-kitchen')
-  const ridge = makeCurrent('dev-bushfire')
+  const garden = makeCurrent(DEVICE_IDS.garden)
+  const kitchen = makeCurrent(DEVICE_IDS.kitchen)
+  const ridge = makeCurrent(DEVICE_IDS.bushfire)
 
   return (
     <div className="min-h-screen bg-background surface-glow">
@@ -75,16 +75,18 @@ export function Playground() {
         <Section title="Monitor card">
           <div className="grid gap-5 sm:grid-cols-2">
             <MonitorCard
-              device={byId['dev-garden']}
+              device={byId[DEVICE_IDS.garden]}
               current={garden}
             />
             <MonitorCard
-              device={byId['dev-kitchen']}
+              device={byId[DEVICE_IDS.kitchen]}
               loading
             />
-            <MonitorCard device={{ ...byId['dev-new'], ota: { status: 'update_available' } }} />
             <MonitorCard
-              device={byId['dev-bushfire']}
+              device={{ ...byId[DEVICE_IDS.new], ota: { status: 'update_available' } }}
+            />
+            <MonitorCard
+              device={byId[DEVICE_IDS.bushfire]}
               current={ridge}
             />
           </div>
@@ -94,7 +96,7 @@ export function Playground() {
           <div className="grid gap-8">
             <MonitorReadings
               current={kitchen}
-              device={byId['dev-kitchen']}
+              device={byId[DEVICE_IDS.kitchen]}
             />
             <MonitorReadings loading />
           </div>
