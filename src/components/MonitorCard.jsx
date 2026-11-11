@@ -9,6 +9,7 @@ import {
 } from '@/components/icons.g'
 import { AqiBlock } from '@/components/readings'
 import { Skeleton } from '@/components/ui/skeleton'
+import { aqiInfo } from '@/lib/aqi'
 import { formatNumber, shortAgo } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -51,6 +52,17 @@ function StatusLine({ online, seen, unavailable }) {
   )
 }
 
+// openLabel is what a screen reader hears for a card that opens: the name,
+// then the reading and status the card shows, e.g. "Open Back garden: AQI 32,
+// Good, online".
+function openLabel(name, { current, hasData, loading, unavailable }) {
+  if (loading) return `Open ${name}`
+  if (unavailable) return `Open ${name}: readings unavailable`
+  const status = current?.status === 'online' ? 'online' : 'offline'
+  if (!hasData) return `Open ${name}: no recent readings, ${status}`
+  return `Open ${name}: AQI ${current.aqi}, ${aqiInfo(current.aqi).label}, ${status}`
+}
+
 // MonitorCard is the monitor card from the visual playground, matching the
 // app's MonitorCard (app/lib/widgets/monitor_card.dart): icon, name and status,
 // then the AQI block with temperature and PM2.5. It draws only what it's
@@ -78,7 +90,7 @@ export function MonitorCard({
             onOpen()
           }
         },
-        'aria-label': `Open ${device.name}`,
+        'aria-label': openLabel(device.name, { current, hasData, loading, unavailable }),
       }
     : {}
   const KindIcon = device.is_outdoor ? OutdoorIcon : IndoorIcon
