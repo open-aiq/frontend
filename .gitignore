@@ -12,8 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Firebase deployment cache
+# Firebase deployment cache and CLI log
 .firebase/
+firepit-log.txt
 
 # Editor directories and files
 .vscode/*

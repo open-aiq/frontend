@@ -1,6 +1,5 @@
 dist
 coverage
-firepit-log.txt
 package-lock.json
 src/styles/tokens.css
 src/lib/aqi-bands.g.js
