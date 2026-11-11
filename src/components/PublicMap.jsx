@@ -23,7 +23,6 @@ const WORLD_CENTER = [20, 20]
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const MAX_PRIVACY_ZOOM = 12
 const DEVICE_ICON_SIZE = 64
-const DEVICE_COLORS = BANDS.map((band) => band.bg)
 
 // Vite must bundle MapLibre's module worker as a self-contained asset. Without
 // this explicit URL, dependency optimization can point the browser at a worker
@@ -50,17 +49,35 @@ function colorExpression(property) {
   return bandExpression(property, (band) => band.bg)
 }
 
+// The band's own text tone, the token pairing for anything drawn on its fill.
+// Band fills don't change with the theme, so neither do these labels.
+function labelExpression(property) {
+  return bandExpression(property, (band) => band.fg)
+}
+
 function iconExpression(property) {
   return bandExpression(property, (_band, index) => `device-${index}`)
 }
 
-function deviceIcon(color) {
+// themeColor reads a design token from the page, e.g. themeColor('card').
+// MapLibre and canvas can't resolve `var(--card)`, so we hand them the value.
+function themeColor(name, fallback) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim()
+  return value || fallback
+}
+
+// The outline around markers and clusters follows the theme's card color.
+function outlineColor() {
+  return themeColor('card', '#ffffff')
+}
+
+function deviceIcon(band, outline) {
   const canvas = document.createElement('canvas')
   canvas.width = DEVICE_ICON_SIZE
   canvas.height = DEVICE_ICON_SIZE
   const context = canvas.getContext('2d')
 
-  context.strokeStyle = '#ffffff'
+  context.strokeStyle = outline
   context.lineWidth = 4
   context.lineCap = 'round'
   context.beginPath()
@@ -70,19 +87,35 @@ function deviceIcon(color) {
   context.lineTo(38, 12)
   context.stroke()
 
-  context.fillStyle = color
-  context.strokeStyle = '#ffffff'
+  context.fillStyle = band.bg
+  context.strokeStyle = outline
   context.lineWidth = 4
   context.beginPath()
   context.roundRect(12, 18, 40, 36, 8)
   context.fill()
   context.stroke()
 
-  context.fillStyle = 'rgba(23, 32, 51, 0.28)'
+  context.fillStyle = band.fg
+  context.globalAlpha = 0.45
   context.fillRect(22, 45, 4, 3)
   context.fillRect(30, 45, 4, 3)
   context.fillRect(38, 45, 4, 3)
   return context.getImageData(0, 0, DEVICE_ICON_SIZE, DEVICE_ICON_SIZE)
+}
+
+// paintOutlines redraws everything that follows the theme. Call it once the
+// layers exist, and again when the theme changes.
+function paintOutlines(map) {
+  const outline = outlineColor()
+  BANDS.forEach((band, index) => {
+    const id = `device-${index}`
+    const image = deviceIcon(band, outline)
+    if (map.hasImage(id)) map.updateImage(id, image)
+    else map.addImage(id, image, { pixelRatio: 2 })
+  })
+  if (map.getLayer('device-clusters')) {
+    map.setPaintProperty('device-clusters', 'circle-stroke-color', outline)
+  }
 }
 
 function popupContent(device) {
@@ -150,10 +183,9 @@ export function PublicMap({
     resizeObserver.observe(containerRef.current)
     mapRef.current = map
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+    let layersReady = false
     map.on('load', () => {
-      DEVICE_COLORS.forEach((color, index) => {
-        map.addImage(`device-${index}`, deviceIcon(color), { pixelRatio: 2 })
-      })
+      paintOutlines(map)
       map.addSource('devices', {
         type: 'geojson',
         data: geojsonRef.current,
@@ -170,7 +202,7 @@ export function PublicMap({
         paint: {
           'circle-color': colorExpression('worst_aqi'),
           'circle-radius': ['step', ['get', 'point_count'], 22, 10, 27, 50, 34],
-          'circle-stroke-color': '#ffffff',
+          'circle-stroke-color': outlineColor(),
           'circle-stroke-width': 3,
         },
       })
@@ -180,7 +212,7 @@ export function PublicMap({
         source: 'devices',
         filter: ['has', 'point_count'],
         layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 13 },
-        paint: { 'text-color': '#172033' },
+        paint: { 'text-color': labelExpression('worst_aqi') },
       })
       map.addLayer({
         id: 'device-privacy-area',
@@ -220,8 +252,9 @@ export function PublicMap({
           'text-size': 16,
           'text-allow-overlap': true,
         },
-        paint: { 'text-color': '#172033' },
+        paint: { 'text-color': labelExpression('aqi') },
       })
+      layersReady = true
       if (devicesRef.current.length) {
         const bounds = new LngLatBounds()
         devicesRef.current.forEach((device) => bounds.extend([device.lon, device.lat]))
@@ -261,7 +294,17 @@ export function PublicMap({
         })
       }
     })
+    // The theme lives in a class on <html>. When it flips, the tokens have new
+    // values, so repaint the outlines to match.
+    const themeObserver = new MutationObserver(() => {
+      if (layersReady) paintOutlines(map)
+    })
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
     return () => {
+      themeObserver.disconnect()
       resizeObserver.disconnect()
       popupRef.current?.remove()
       map.remove()
