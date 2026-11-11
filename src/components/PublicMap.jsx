@@ -9,9 +9,7 @@ import {
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-import { CloudOff, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { MonitorIllustration } from '@/components/MonitorIllustration'
+import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { aqiInfo } from '@/lib/aqi'
 import { appPath } from '@/lib/paths'
 import { BANDS } from '@/lib/aqi-bands.g'
@@ -23,6 +21,11 @@ const WORLD_CENTER = [20, 20]
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const MAX_PRIVACY_ZOOM = 12
 const DEVICE_ICON_SIZE = 64
+
+// The loading, error and empty states float over the map in a small card, and
+// let clicks through to the map around it.
+const OVERLAY = 'pointer-events-none absolute inset-0 grid place-items-center p-6'
+const OVERLAY_CARD = 'w-full max-w-xs rounded-3xl border bg-popover shadow-lift'
 
 // Vite must bundle MapLibre's module worker as a self-contained asset. Without
 // this explicit URL, dependency optimization can point the browser at a worker
@@ -349,46 +352,33 @@ export function PublicMap({
         />
       </div>
       {state === 'loading' && (
-        <div
-          className="absolute inset-0 grid place-items-center bg-background/70"
-          aria-busy="true"
-        >
-          <span className="sr-only">Loading the map…</span>
-          <Loader2 className="size-6 animate-spin text-muted-foreground motion-reduce:animate-none" />
+        <div className={OVERLAY}>
+          <div className={cn(OVERLAY_CARD, 'p-6')}>
+            <LoadingState label="Loading the map’s sensors" />
+          </div>
         </div>
       )}
       {state === 'error' && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center p-6 text-center">
-          <div className="pointer-events-auto flex min-h-52 w-full max-w-xs flex-col items-center justify-center rounded-3xl border bg-popover p-6 shadow-lift">
-            <span className="mb-3 grid size-12 place-items-center rounded-full bg-accent text-primary">
-              <CloudOff className="size-6" />
-            </span>
-            <p className="font-semibold">We couldn’t load the map’s sensors</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              It’s usually a brief hiccup. Give it another try in a moment.
-            </p>
-            {retry && (
-              <Button
-                className="mt-4"
-                size="sm"
-                variant="outline"
-                onClick={retry}
-              >
-                Try again
-              </Button>
-            )}
-            <span className="sr-only">Technical error: {error}</span>
+        <div className={OVERLAY}>
+          <div className={cn(OVERLAY_CARD, 'pointer-events-auto')}>
+            <ErrorState
+              compact
+              title="We couldn’t load the map’s sensors"
+              onRetry={retry}
+              detail={error}
+            />
           </div>
         </div>
       )}
       {state === 'ready' && devices.length === 0 && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center p-6 text-center">
-          <div className="flex min-h-48 w-full max-w-xs flex-col items-center justify-center rounded-3xl border bg-popover p-6 shadow-lift">
-            <MonitorIllustration className="mb-2 w-24" />
-            <p className="font-semibold">No shared sensors here yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+        <div className={OVERLAY}>
+          <div className={OVERLAY_CARD}>
+            <EmptyState
+              title="No shared sensors here yet"
+              className="py-8"
+            >
               When people share a sensor and its location, it shows up on this map.
-            </p>
+            </EmptyState>
           </div>
         </div>
       )}
