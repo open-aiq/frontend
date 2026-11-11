@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { devicesToGeoJSON, filterMapDevices, uniqueMapDevices } from '@/lib/map'
+import { devicesToGeoJSON, filterMapDevices, nextMapState, uniqueMapDevices } from '@/lib/map'
 
 const devices = [
   {
@@ -62,5 +62,26 @@ describe('filterMapDevices', () => {
     expect(
       filterMapDevices(devices, { query: '', placement: 'outdoor', status: 'offline' }),
     ).toEqual([])
+  })
+})
+
+describe('nextMapState', () => {
+  const shown = { devices, state: 'ready', error: null }
+
+  it('shows the fetched sensors and clears an earlier error', () => {
+    const failed = { devices: [], state: 'error', error: 'Failed to fetch' }
+    expect(nextMapState(failed, { devices }, false)).toEqual(shown)
+  })
+
+  it('keeps the last good sensors when a background refresh fails', () => {
+    expect(nextMapState(shown, { error: 'Failed to fetch' }, true)).toBe(shown)
+  })
+
+  it('shows the error when the first load or a retry fails', () => {
+    expect(nextMapState(shown, { error: 'Failed to fetch' }, false)).toEqual({
+      devices: [],
+      state: 'error',
+      error: 'Failed to fetch',
+    })
   })
 })
