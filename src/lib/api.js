@@ -80,9 +80,6 @@ export function useApi() {
   )
 }
 
-export async function listPublicDevices() {
-  return (await request('/public/devices')).data ?? []
-}
 export async function getPublicDevice(id) {
   return (await request(`/public/devices/${id}`)).data
 }
