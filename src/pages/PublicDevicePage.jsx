@@ -4,21 +4,30 @@ import { ArrowLeft, MapPin } from 'lucide-react'
 
 import { PublicHeader } from '@/components/PublicHeader'
 import { HistoryChart } from '@/components/HistoryChart'
+import { DeviceFacts } from '@/components/DeviceFacts'
 import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getPublicDevice, getPublicDeviceCurrent, getPublicDeviceHistorical } from '@/lib/api'
+import { shortAgo } from '@/lib/format'
+import { hasRecentReadings } from '@/lib/readings'
+import { errorKind } from '@/lib/errors'
 
 export function PublicDevicePage() {
   const { id } = useParams()
   const [device, setDevice] = useState(null)
   const [current, setCurrent] = useState(null)
   const [points, setPoints] = useState([])
-  const [deviceState, setDeviceState] = useState('loading')
-  const [readingState, setReadingState] = useState('loading')
+  const [deviceState, setDeviceState] = useState('loading') // 'loading' | 'ready' | 'missing' | 'error'
+  const [readingState, setReadingState] = useState('loading') // 'loading' | 'ready' | 'nodata' | 'error'
+  // Bumping this fetches everything again after a failure.
+  const [reloadKey, setReloadKey] = useState(0)
+  const retry = () => setReloadKey((key) => key + 1)
 
   useEffect(() => {
     let active = true
+    setDeviceState('loading')
+    setReadingState('loading')
     getPublicDevice(id)
       .then((data) => {
         if (active) {
@@ -26,8 +35,10 @@ export function PublicDevicePage() {
           setDeviceState('ready')
         }
       })
-      .catch(() => {
-        if (active) setDeviceState('error')
+      .catch((error) => {
+        // Only a not-found answer means the sensor is gone or private. A
+        // dropped connection or a server error is worth another try.
+        if (active) setDeviceState(errorKind(error) === 'not-found' ? 'missing' : 'error')
       })
     Promise.all([getPublicDeviceCurrent(id), getPublicDeviceHistorical(id, 'daily')])
       .then(([now, history]) => {
@@ -38,12 +49,15 @@ export function PublicDevicePage() {
         }
       })
       .catch((error) => {
-        if (active) setReadingState(error.status === 404 ? 'nodata' : 'error')
+        if (!active) return
+        const kind = errorKind(error)
+        if (kind === 'not-found') setDeviceState('missing')
+        else setReadingState(kind === 'no-readings' ? 'nodata' : 'error')
       })
     return () => {
       active = false
     }
-  }, [id])
+  }, [id, reloadKey])
 
   return (
     <div className="min-h-screen bg-background surface-glow">
@@ -61,6 +75,14 @@ export function PublicDevicePage() {
           </div>
         )}
         {deviceState === 'error' && (
+          <div className="mt-8 surface-raised">
+            <ErrorState
+              title="We couldn’t load this sensor"
+              onRetry={retry}
+            />
+          </div>
+        )}
+        {deviceState === 'missing' && (
           <div className="mt-8 surface-raised">
             <EmptyState title="We couldn’t find this sensor">
               Its owner may have stopped sharing it, or the link is out of date. You can find other
@@ -94,9 +116,10 @@ export function PublicDevicePage() {
               )}
               {readingState === 'error' && (
                 <div className="surface-raised">
-                  <ErrorState title="We couldn’t load the readings">
-                    It’s usually a brief hiccup. Refresh the page in a moment.
-                  </ErrorState>
+                  <ErrorState
+                    title="We couldn’t load the readings"
+                    onRetry={retry}
+                  />
                 </div>
               )}
               {readingState === 'ready' && current && (
@@ -107,10 +130,26 @@ export function PublicDevicePage() {
                       <CardDescription>Averages over the last hour</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <MonitorReadings
-                        current={current}
-                        placement={device}
-                      />
+                      {hasRecentReadings(current) ? (
+                        <MonitorReadings
+                          current={current}
+                          placement={device}
+                        />
+                      ) : (
+                        <div className="space-y-2">
+                          <EmptyState
+                            title="No readings in the last hour"
+                            className="py-10"
+                          >
+                            This sensor last checked in {shortAgo(current.last_seen)}. Once it’s
+                            back online, its readings show up here.
+                          </EmptyState>
+                          <DeviceFacts
+                            current={current}
+                            placement={device}
+                          />
+                        </div>
+                      )}
                       {current.location && (
                         <Link
                           to={`/map?device=${id}`}

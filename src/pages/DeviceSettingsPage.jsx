@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, LoadingState } from '@/components/states'
+import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { useApi } from '@/lib/api'
 
 export function DeviceSettingsPage() {
@@ -26,7 +26,7 @@ export function DeviceSettingsPage() {
   const navigate = useNavigate()
 
   const [device, setDevice] = useState(null)
-  const [state, setState] = useState('loading') // 'loading' | 'ready' | 'error'
+  const [state, setState] = useState('loading') // 'loading' | 'ready' | 'missing' | 'error'
   const [name, setName] = useState('')
   const [isOutdoor, setIsOutdoor] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
@@ -46,7 +46,8 @@ export function DeviceSettingsPage() {
       const devices = await listDevices()
       const found = devices.find((d) => d.id === id)
       if (!found) {
-        setState('error')
+        // The list loaded and the device isn't in it: it's gone, not a hiccup.
+        setState('missing')
         return
       }
       setDevice(found)
@@ -138,6 +139,25 @@ export function DeviceSettingsPage() {
   }
 
   if (state === 'error') {
+    return (
+      <AppShell
+        backTo="/app"
+        backLabel="Back to my monitors"
+        title="Device settings"
+      >
+        <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="surface-raised">
+            <ErrorState
+              title="We couldn’t load this device"
+              onRetry={loadDevice}
+            />
+          </div>
+        </main>
+      </AppShell>
+    )
+  }
+
+  if (state === 'missing') {
     return (
       <AppShell
         backTo="/app"

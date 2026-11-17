@@ -34,3 +34,15 @@ export function filterMapDevices(devices, { query = '', placement = 'all', statu
     return matchesQuery && matchesPlacement && (status === 'all' || status === device.status)
   })
 }
+
+// nextMapState is what the map shows after a fetch settles. `result` is
+// `{ devices }` on success or `{ error }` on failure. A failed background
+// refresh keeps the last good sensors on the map and stays quiet; only a
+// failed first load (or retry) shows the error.
+export function nextMapState(prev, result, background = false) {
+  if (result.error == null) {
+    return { devices: uniqueMapDevices(result.devices), state: 'ready', error: null }
+  }
+  if (background) return prev
+  return { devices: [], state: 'error', error: result.error }
+}

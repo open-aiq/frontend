@@ -9,10 +9,12 @@ const DAY = 24 * HOUR
 
 const iso = (ms) => new Date(ms).toISOString()
 
-// One device per AQI band, plus one that hasn't reported yet.
+// One device per AQI band, plus one that hasn't reported yet. IDs are UUIDv4,
+// as the backend issues them; `key` is a readable handle for review code.
 const SEEDS = [
   {
-    id: 'dev-garden',
+    key: 'garden',
+    id: 'a5f5928f-3d13-4c49-a99a-a58dcab35aed',
     name: 'Back garden',
     aqi: 32,
     outdoor: true,
@@ -22,7 +24,8 @@ const SEEDS = [
     lon: 151.2093,
   },
   {
-    id: 'dev-kitchen',
+    key: 'kitchen',
+    id: '4f036a14-7e7c-492c-8191-08606c056c69',
     name: 'Kitchen',
     aqi: 78,
     outdoor: false,
@@ -30,7 +33,8 @@ const SEEDS = [
     location: false,
   },
   {
-    id: 'dev-balcony',
+    key: 'balcony',
+    id: '492362d9-5987-4448-b5b7-378aad8f581b',
     name: 'Balcony',
     aqi: 128,
     outdoor: true,
@@ -40,7 +44,8 @@ const SEEDS = [
     lon: 151.2767,
   },
   {
-    id: 'dev-school',
+    key: 'school',
+    id: 'cb9dc2ff-c626-435a-a7ce-315ce657025c',
     name: 'School gate',
     aqi: 172,
     outdoor: true,
@@ -50,7 +55,8 @@ const SEEDS = [
     lon: 151.1802,
   },
   {
-    id: 'dev-workshop',
+    key: 'workshop',
+    id: 'a09f71cd-ffcc-46d9-bb0c-3ee02f5b9e74',
     name: 'Workshop',
     aqi: 240,
     outdoor: false,
@@ -58,7 +64,8 @@ const SEEDS = [
     location: false,
   },
   {
-    id: 'dev-bushfire',
+    key: 'bushfire',
+    id: 'c04a0342-3245-4770-b54d-726aee1d7fa1',
     name: 'Ridge lookout',
     aqi: 340,
     outdoor: true,
@@ -69,7 +76,8 @@ const SEEDS = [
     offline: true,
   },
   {
-    id: 'dev-new',
+    key: 'new',
+    id: 'c722c548-62c7-4d8b-807a-2306b38c6ed1',
     name: 'New sensor',
     aqi: null,
     outdoor: false,
@@ -88,11 +96,17 @@ function pm25ForAqi(aqi) {
   return 225.5 + ((aqi - 300) / 200) * 99.9
 }
 
+// DEVICE_IDS maps each seed's key to its ID, e.g. DEVICE_IDS.garden.
+export const DEVICE_IDS = Object.fromEntries(SEEDS.map((seed) => [seed.key, seed.id]))
+
+// An ID no device has, for the not-found states.
+export const MISSING_DEVICE_ID = 'f5d8c9b4-5cfb-4910-85da-9c870dfb651f'
+
 export function makeDevices() {
   const created = Date.now() - 90 * DAY
   return SEEDS.map((seed, index) => ({
     id: seed.id,
-    device_id: `dev_${seed.id.replace('dev-', '').padEnd(12, '0')}a1b2c3d4e5f6`,
+    device_id: `dev_${seed.id.replaceAll('-', '')}`,
     name: seed.name,
     is_public: seed.public,
     is_outdoor: seed.outdoor,
@@ -104,30 +118,54 @@ export function makeDevices() {
   }))
 }
 
+export function isKnownDevice(id) {
+  return SEEDS.some((seed) => seed.id === id)
+}
+
 export function hasReadings(id) {
   return SEEDS.find((seed) => seed.id === id)?.aqi != null
 }
 
-export function makeCurrent(id, { offline = false } = {}) {
-  const seed = SEEDS.find((item) => item.id === id)
-  if (!seed || seed.aqi == null) return null
-  const isOffline = offline || seed.offline
+// How long an offline review monitor has been quiet.
+const OFFLINE_FOR = 3 * HOUR + 12 * MINUTE
+
+// seedMetrics is a seed's last real reading.
+function seedMetrics(seed) {
   const pm25 = pm25ForAqi(seed.aqi)
   const temperature = seed.outdoor ? 18.4 + (seed.aqi % 7) : 22.1
-  const humidity = seed.outdoor ? 64 : 46
   return {
     aqi: seed.aqi,
     pm1_0: pm25 * 0.68,
     pm2_5: pm25,
     pm10_0: pm25 * 1.42,
     temperature,
-    humidity,
+    humidity: seed.outdoor ? 64 : 46,
     heat_index: temperature + 0.6,
-    status: isOffline ? 'offline' : 'online',
-    last_seen: iso(Date.now() - (isOffline ? 3 * HOUR + 12 * MINUTE : 2 * MINUTE)),
-    sample_count: isOffline ? 4 : 58,
-    location: seed.location ? { lat: seed.lat, lon: seed.lon, provider: 'phone' } : null,
   }
+}
+
+export function makeCurrent(id, { offline = false } = {}) {
+  const seed = SEEDS.find((item) => item.id === id)
+  if (!seed || seed.aqi == null) return null
+  const isOffline = offline || seed.offline
+  // Silent for over an hour, the backend has nothing to average: it answers
+  // with every metric at zero and `sample_count: 0`.
+  const metrics = isOffline
+    ? { aqi: 0, pm1_0: 0, pm2_5: 0, pm10_0: 0, temperature: 0, humidity: 0, heat_index: 0 }
+    : seedMetrics(seed)
+  return {
+    ...metrics,
+    status: isOffline ? 'offline' : 'online',
+    last_seen: iso(Date.now() - (isOffline ? OFFLINE_FOR : 2 * MINUTE)),
+    sample_count: isOffline ? 0 : 58,
+    location: seed.location ? seedLocation(seed) : null,
+  }
+}
+
+// seedLocation matches the backend's airquality.Location: fixes come from the
+// mobile app, with the time they were taken.
+function seedLocation(seed) {
+  return { lat: seed.lat, lon: seed.lon, provider: 'mobile', timestamp: iso(Date.now() - 2 * DAY) }
 }
 
 const TIMELINES = {
@@ -178,18 +216,21 @@ export function makePublicDevice(id) {
 
 export function makeMapDevices({ offline = false } = {}) {
   return SEEDS.filter((seed) => seed.public && seed.location && seed.aqi != null).map((seed) => {
-    const current = makeCurrent(seed.id, { offline })
+    // The map endpoint keeps a monitor's last complete reading, so an offline
+    // one still has real numbers here, unlike its zeroed current reading.
+    const isOffline = offline || seed.offline
+    const last = seedMetrics(seed)
     return {
       id: seed.id,
       name: seed.name,
       lat: seed.lat,
       lon: seed.lon,
       is_outdoor: seed.outdoor,
-      status: current.status,
-      aqi: current.aqi,
-      pm2_5: current.pm2_5,
-      temperature: current.temperature,
-      measured_at: current.last_seen,
+      status: isOffline ? 'offline' : 'online',
+      aqi: last.aqi,
+      pm2_5: last.pm2_5,
+      temperature: last.temperature,
+      measured_at: iso(Date.now() - (isOffline ? OFFLINE_FOR : 2 * MINUTE)),
     }
   })
 }

@@ -7,8 +7,10 @@ import { useMemo } from 'react'
 // A relative import reaches the real module; the exact-match alias only
 // rewrites `@/lib/api`.
 import { ApiError, apiErrorFromBody } from '../lib/api.js'
+import { PROBLEM } from '../lib/errors.js'
 import {
   hasReadings,
+  isKnownDevice,
   makeCurrent,
   makeDevices,
   makeHistory,
@@ -25,13 +27,38 @@ const scenario = getScenario()
 // In-memory devices so renames, toggles and deletes stick until a reload.
 let devices = scenario === 'empty' ? [] : makeDevices()
 
-const notFound = () =>
+// The same problems the backend sends (backend/internal/platform/problem).
+const deviceNotFound = () =>
   apiErrorFromBody(404, {
-    type: 'https://docs.air-iq.net/problems/not-found',
-    title: 'Not Found',
+    type: PROBLEM.notFound,
+    title: 'Resource not found',
     status: 404,
-    detail: 'No readings found for this device.',
+    detail: 'Device not found.',
   })
+
+const noReadings = () =>
+  apiErrorFromBody(404, {
+    type: PROBLEM.noReadings,
+    title: 'No readings available',
+    status: 404,
+    detail: 'No readings received yet.',
+  })
+
+const invalidId = () =>
+  apiErrorFromBody(422, {
+    type: PROBLEM.validation,
+    title: 'Request validation failed',
+    status: 422,
+    detail: 'One or more path parameters are invalid.',
+    errors: [{ in: 'path', name: 'id', code: 'format', detail: 'id must be a UUIDv4' }],
+  })
+
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+// checkId rejects an ID the way the backend does before it looks anything up.
+function checkId(id) {
+  if (!UUID_V4.test(id)) throw invalidId()
+}
 
 function respond(produce) {
   if (scenario === 'loading') return new Promise(() => {})
@@ -40,8 +67,8 @@ function respond(produce) {
       if (scenario === 'error') {
         reject(
           apiErrorFromBody(500, {
-            type: 'https://docs.air-iq.net/problems/internal',
-            title: 'Internal Server Error',
+            type: PROBLEM.internal,
+            title: 'Internal server error',
             status: 500,
             detail: 'Review mode: simulated server error.',
           }),
@@ -58,11 +85,14 @@ function respond(produce) {
 }
 
 function current(id) {
-  if (scenario === 'no-data' || !hasReadings(id)) throw notFound()
+  checkId(id)
+  if (!isKnownDevice(id) || !devices.some((device) => device.id === id)) throw deviceNotFound()
+  if (scenario === 'no-data' || !hasReadings(id)) throw noReadings()
   return makeCurrent(id, { offline: scenario === 'offline' })
 }
 
 function history(id, timeline) {
+  checkId(id)
   if (scenario === 'no-data') return []
   return makeHistory(id, timeline)
 }
@@ -73,8 +103,9 @@ export function useApi() {
       listDevices: () => respond(() => devices.map((device) => ({ ...device }))),
       updateDevice: (id, patch) =>
         respond(() => {
+          checkId(id)
           const index = devices.findIndex((device) => device.id === id)
-          if (index < 0) throw notFound()
+          if (index < 0) throw deviceNotFound()
           devices[index] = { ...devices[index], ...patch, updated_at: new Date().toISOString() }
           return { ...devices[index] }
         }),
@@ -97,8 +128,9 @@ export function useApi() {
 
 export function getPublicDevice(id) {
   return respond(() => {
+    checkId(id)
     const device = scenario === 'empty' ? null : makePublicDevice(id)
-    if (!device) throw notFound()
+    if (!device) throw deviceNotFound()
     return device
   })
 }

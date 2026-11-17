@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Settings } from 'lucide-react'
 
 import { AppShell } from '@/components/AppShell'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { HistoryChart } from '@/components/HistoryChart'
+import { DeviceFacts } from '@/components/DeviceFacts'
 import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState } from '@/components/states'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApi } from '@/lib/api'
+import { shortAgo } from '@/lib/format'
+import { hasRecentReadings } from '@/lib/readings'
+import { errorKind } from '@/lib/errors'
 
 const TIMELINES = [
   { value: 'daily', label: 'Daily' },
@@ -29,13 +33,15 @@ export function DevicePage() {
   const navigate = useNavigate()
 
   const [device, setDevice] = useState(null)
-  const [deviceState, setDeviceState] = useState('loading') // 'loading' | 'ready' | 'error'
+  const [deviceState, setDeviceState] = useState('loading') // 'loading' | 'ready' | 'missing' | 'error'
   const [current, setCurrent] = useState(null)
-  const [currentState, setCurrentState] = useState('loading') // 'loading' | 'ready' | 'nodata' | 'error'
+  const [currentState, setCurrentState] = useState('loading') // 'loading' | 'ready' | 'nodata' | 'missing' | 'error'
   const [timeline, setTimeline] = useState('daily')
   const [metricKey, setMetricKey] = useState('aqi')
   const [points, setPoints] = useState([])
   const [historyState, setHistoryState] = useState('loading') // 'loading' | 'ready' | 'error'
+  // Bumping this fetches the readings and history again after a failure.
+  const [reloadKey, setReloadKey] = useState(0)
 
   // There is no GET /devices/{id}; resolve the device from the list.
   const loadDevice = useCallback(async () => {
@@ -44,11 +50,18 @@ export function DevicePage() {
       const devices = await listDevices()
       const found = devices.find((d) => d.id === id)
       setDevice(found ?? null)
-      setDeviceState(found ? 'ready' : 'error')
+      // The list loaded and the device isn't in it: it's gone, not a hiccup.
+      setDeviceState(found ? 'ready' : 'missing')
     } catch {
       setDeviceState('error')
     }
   }, [id, listDevices])
+
+  const retryReadings = () => setReloadKey((key) => key + 1)
+  const retryAll = () => {
+    loadDevice()
+    retryReadings()
+  }
 
   useEffect(() => {
     loadDevice()
@@ -65,12 +78,15 @@ export function DevicePage() {
       })
       .catch((err) => {
         if (cancelled) return
-        setCurrentState(err.status === 404 ? 'nodata' : 'error')
+        const kind = errorKind(err)
+        setCurrentState(
+          kind === 'no-readings' ? 'nodata' : kind === 'not-found' ? 'missing' : 'error',
+        )
       })
     return () => {
       cancelled = true
     }
-  }, [getDeviceCurrent, id])
+  }, [getDeviceCurrent, id, reloadKey])
 
   useEffect(() => {
     let cancelled = false
@@ -88,7 +104,44 @@ export function DevicePage() {
     return () => {
       cancelled = true
     }
-  }, [getDeviceHistorical, id, timeline])
+  }, [getDeviceHistorical, id, timeline, reloadKey])
+
+  const missing = deviceState === 'missing' || currentState === 'missing'
+
+  if (missing || deviceState === 'error') {
+    return (
+      <AppShell
+        backTo="/app"
+        backLabel="Back to my monitors"
+        title={missing ? 'We couldn’t find this device' : 'We couldn’t load this device'}
+      >
+        <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="surface-raised">
+            {missing ? (
+              <EmptyState
+                title="We couldn’t find this device"
+                action={
+                  <Link
+                    to="/app"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    Back to your devices
+                  </Link>
+                }
+              >
+                It may have been removed, or the link is out of date.
+              </EmptyState>
+            ) : (
+              <ErrorState
+                title="We couldn’t load this device"
+                onRetry={retryAll}
+              />
+            )}
+          </div>
+        </main>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell
@@ -97,14 +150,9 @@ export function DevicePage() {
       title={
         deviceState === 'ready' && device ? (
           device.name
-        ) : deviceState === 'error' ? (
-          'We couldn’t find this device'
         ) : (
           <span className="text-muted-foreground">Loading device…</span>
         )
-      }
-      subtitle={
-        deviceState === 'error' ? 'It may have been removed, or the link is out of date.' : null
       }
     >
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -136,12 +184,28 @@ export function DevicePage() {
               <ErrorState
                 compact
                 title="We couldn’t load the latest readings"
-              >
-                It’s usually a brief hiccup. Refresh the page in a moment.
-              </ErrorState>
+                onRetry={retryReadings}
+              />
             )}
 
-            {currentState === 'ready' && current && (
+            {/* Quiet for over an hour: the API sends zeros, so say so instead. */}
+            {currentState === 'ready' && current && !hasRecentReadings(current) && (
+              <div className="space-y-2">
+                <EmptyState
+                  title="No readings in the last hour"
+                  className="py-10"
+                >
+                  Your monitor last checked in {shortAgo(current.last_seen)}. Once it’s back online,
+                  its readings show up here.
+                </EmptyState>
+                <DeviceFacts
+                  current={current}
+                  device={device}
+                />
+              </div>
+            )}
+
+            {currentState === 'ready' && hasRecentReadings(current) && (
               <div className="space-y-6">
                 <MonitorReadings
                   current={current}
@@ -212,6 +276,7 @@ export function DevicePage() {
                 compact
                 className="h-[280px]"
                 title="We couldn’t load the history"
+                onRetry={retryReadings}
               >
                 Try another range, or come back in a moment.
               </ErrorState>

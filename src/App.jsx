@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { RedirectToSignIn, Show, SignIn, SignUp } from '@clerk/react'
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { MonitorIllustration } from '@/components/MonitorIllustration'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -21,6 +22,9 @@ const DeviceSettingsPage = lazy(() =>
 )
 const LandingPage = lazy(() =>
   import('@/pages/LandingPage').then(({ LandingPage }) => ({ default: LandingPage })),
+)
+const NotFoundPage = lazy(() =>
+  import('@/pages/NotFoundPage').then(({ NotFoundPage }) => ({ default: NotFoundPage })),
 )
 const PublicDevicePage = lazy(() =>
   import('@/pages/PublicDevicePage').then(({ PublicDevicePage }) => ({
@@ -81,91 +85,98 @@ function LegacyPublicDeviceRedirect() {
 }
 
 export default function App() {
+  const { pathname } = useLocation()
   return (
     <>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route
-            path="/sign-in/*"
-            element={
-              <AuthPage>
-                <SignIn />
-              </AuthPage>
-            }
-          />
-          <Route
-            path="/sign-up/*"
-            element={
-              <AuthPage>
-                <SignUp />
-              </AuthPage>
-            }
-          />
-          <Route
-            path="/"
-            element={<LandingPage />}
-          />
-          {Playground && (
+      <ErrorBoundary resetKey={pathname}>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
             <Route
-              path="/playground"
-              element={<Playground />}
+              path="/sign-in/*"
+              element={
+                <AuthPage>
+                  <SignIn />
+                </AuthPage>
+              }
             />
-          )}
-          <Route
-            path="/map"
-            element={<PublicMapPage />}
-          />
-          <Route
-            path="/devices/:id"
-            element={<PublicDevicePage />}
-          />
-          <Route
-            path="/public"
-            element={
-              <Navigate
-                to="/map"
-                replace
+            <Route
+              path="/sign-up/*"
+              element={
+                <AuthPage>
+                  <SignUp />
+                </AuthPage>
+              }
+            />
+            <Route
+              path="/"
+              element={<LandingPage />}
+            />
+            {Playground && (
+              <Route
+                path="/playground"
+                element={<Playground />}
               />
-            }
-          />
-          <Route
-            path="/public/devices/:id"
-            element={<LegacyPublicDeviceRedirect />}
-          />
-          <Route
-            path="/app"
-            element={
-              <Private>
-                <Dashboard />
-              </Private>
-            }
-          />
-          <Route
-            path="/app/account"
-            element={
-              <Private>
-                <AccountPage />
-              </Private>
-            }
-          />
-          <Route
-            path="/app/devices/:id"
-            element={
-              <Private>
-                <DevicePage />
-              </Private>
-            }
-          />
-          <Route
-            path="/app/devices/:id/settings"
-            element={
-              <Private>
-                <DeviceSettingsPage />
-              </Private>
-            }
-          />
-        </Routes>
-      </Suspense>
+            )}
+            <Route
+              path="/map"
+              element={<PublicMapPage />}
+            />
+            <Route
+              path="/devices/:id"
+              element={<PublicDevicePage />}
+            />
+            <Route
+              path="/public"
+              element={
+                <Navigate
+                  to="/map"
+                  replace
+                />
+              }
+            />
+            <Route
+              path="/public/devices/:id"
+              element={<LegacyPublicDeviceRedirect />}
+            />
+            <Route
+              path="/app"
+              element={
+                <Private>
+                  <Dashboard />
+                </Private>
+              }
+            />
+            <Route
+              path="/app/account"
+              element={
+                <Private>
+                  <AccountPage />
+                </Private>
+              }
+            />
+            <Route
+              path="/app/devices/:id"
+              element={
+                <Private>
+                  <DevicePage />
+                </Private>
+              }
+            />
+            <Route
+              path="/app/devices/:id/settings"
+              element={
+                <Private>
+                  <DeviceSettingsPage />
+                </Private>
+              }
+            />
+            <Route
+              path="*"
+              element={<NotFoundPage />}
+            />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
       <Toaster
         richColors
         position="bottom-right"
