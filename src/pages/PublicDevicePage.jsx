@@ -4,10 +4,13 @@ import { ArrowLeft, MapPin } from 'lucide-react'
 
 import { PublicHeader } from '@/components/PublicHeader'
 import { HistoryChart } from '@/components/HistoryChart'
+import { DeviceFacts } from '@/components/DeviceFacts'
 import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getPublicDevice, getPublicDeviceCurrent, getPublicDeviceHistorical } from '@/lib/api'
+import { shortAgo } from '@/lib/format'
+import { hasRecentReadings } from '@/lib/readings'
 import { errorKind } from '@/lib/errors'
 
 export function PublicDevicePage() {
@@ -127,10 +130,26 @@ export function PublicDevicePage() {
                       <CardDescription>Averages over the last hour</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <MonitorReadings
-                        current={current}
-                        placement={device}
-                      />
+                      {hasRecentReadings(current) ? (
+                        <MonitorReadings
+                          current={current}
+                          placement={device}
+                        />
+                      ) : (
+                        <div className="space-y-2">
+                          <EmptyState
+                            title="No readings in the last hour"
+                            className="py-10"
+                          >
+                            This sensor last checked in {shortAgo(current.last_seen)}. Once it’s
+                            back online, its readings show up here.
+                          </EmptyState>
+                          <DeviceFacts
+                            current={current}
+                            placement={device}
+                          />
+                        </div>
+                      )}
                       {current.location && (
                         <Link
                           to={`/map?device=${id}`}

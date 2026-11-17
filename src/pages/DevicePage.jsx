@@ -6,10 +6,13 @@ import { AppShell } from '@/components/AppShell'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { HistoryChart } from '@/components/HistoryChart'
+import { DeviceFacts } from '@/components/DeviceFacts'
 import { MonitorReadings } from '@/components/readings'
 import { EmptyState, ErrorState } from '@/components/states'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApi } from '@/lib/api'
+import { shortAgo } from '@/lib/format'
+import { hasRecentReadings } from '@/lib/readings'
 import { errorKind } from '@/lib/errors'
 
 const TIMELINES = [
@@ -185,7 +188,24 @@ export function DevicePage() {
               />
             )}
 
-            {currentState === 'ready' && current && (
+            {/* Quiet for over an hour: the API sends zeros, so say so instead. */}
+            {currentState === 'ready' && current && !hasRecentReadings(current) && (
+              <div className="space-y-2">
+                <EmptyState
+                  title="No readings in the last hour"
+                  className="py-10"
+                >
+                  Your monitor last checked in {shortAgo(current.last_seen)}. Once it’s back online,
+                  its readings show up here.
+                </EmptyState>
+                <DeviceFacts
+                  current={current}
+                  device={device}
+                />
+              </div>
+            )}
+
+            {currentState === 'ready' && hasRecentReadings(current) && (
               <div className="space-y-6">
                 <MonitorReadings
                   current={current}

@@ -10,6 +10,7 @@ import {
 import { AqiBlock } from '@/components/readings'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatNumber, shortAgo } from '@/lib/format'
+import { hasRecentReadings } from '@/lib/readings'
 import { cn } from '@/lib/utils'
 
 function Stat({ icon: Icon, label, value, unit, loading }) {
@@ -56,7 +57,9 @@ function StatusLine({ online, seen, unavailable }) {
 // then the AQI block with temperature and PM2.5. It draws only what it's
 // given; DeviceCard does the fetching.
 //
-// `current` is the API's current reading, or null when there's none yet.
+// `current` is the API's current reading, or null when there's none yet. A
+// monitor that's been quiet for an hour sends zeros with `sample_count: 0`;
+// that shows as no data, never as "0 AQI · Good".
 export function MonitorCard({
   device,
   current = null,
@@ -65,7 +68,7 @@ export function MonitorCard({
   onOpen,
   className,
 }) {
-  const hasData = !loading && current != null
+  const hasData = !loading && hasRecentReadings(current)
   const update = device.ota?.status === 'update_available'
   const open = onOpen
     ? {
