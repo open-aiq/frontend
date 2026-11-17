@@ -10,6 +10,7 @@ import { DeviceFacts } from '@/components/DeviceFacts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { aqiInfo } from '@/lib/aqi'
 import { formatNumber } from '@/lib/format'
+import { recentReadings } from '@/lib/readings'
 import { cn } from '@/lib/utils'
 
 // The reading pieces from the visual playground (docs: Contribute > Visual
@@ -234,19 +235,21 @@ export function MonitorReadings({ current, device, placement, loading = false, c
       </div>
     )
   }
+  // A quiet monitor sends zeros with `sample_count: 0`; show those as "--".
+  const reading = recentReadings(current)
   return (
     <div className={cn('grid gap-3', className)}>
       <div className="grid gap-3 md:grid-cols-2">
         <div className={LEFT}>
           <AqiTile
-            aqi={current?.aqi}
+            aqi={reading?.aqi}
             className="flex flex-col justify-center py-4"
           />
-          <ParticulatesGroup current={current} />
+          <ParticulatesGroup current={reading} />
         </div>
         <div className={RIGHT}>
-          <FeelsLikeGroup current={current} />
-          <ClimateGroup current={current} />
+          <FeelsLikeGroup current={reading} />
+          <ClimateGroup current={reading} />
         </div>
       </div>
       <DeviceFacts
