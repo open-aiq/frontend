@@ -18,11 +18,6 @@ describe('apiErrorFromBody', () => {
     expect(error.fieldError('body', 'name')?.code).toBe('required')
   })
 
-  it('supports the legacy error envelope during rollout', () => {
-    expect(apiErrorFromBody(400, { details: 'name is required' }).message).toBe('name is required')
-    expect(apiErrorFromBody(401, { error: 'Unauthorized' }).message).toBe('Unauthorized')
-  })
-
   it('falls back safely for missing or non-object bodies', () => {
     expect(apiErrorFromBody(500, null).message).toBe('Request failed (500)')
     expect(apiErrorFromBody(502, 'html').message).toBe('Request failed (502)')

@@ -126,16 +126,6 @@ export function useApi() {
   )
 }
 
-export function listPublicDevices() {
-  return respond(() =>
-    scenario === 'empty' ? [] : devices.filter((device) => device.is_public).map(makePublicLike),
-  )
-}
-
-function makePublicLike({ id, name, is_outdoor, is_public, created_at, updated_at }) {
-  return { id, name, is_outdoor, is_public, created_at, updated_at }
-}
-
 export function getPublicDevice(id) {
   return respond(() => {
     checkId(id)
