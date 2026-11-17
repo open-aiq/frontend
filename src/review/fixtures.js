@@ -9,10 +9,12 @@ const DAY = 24 * HOUR
 
 const iso = (ms) => new Date(ms).toISOString()
 
-// One device per AQI band, plus one that hasn't reported yet.
+// One device per AQI band, plus one that hasn't reported yet. IDs are UUIDv4,
+// as the backend issues them; `key` is a readable handle for review code.
 const SEEDS = [
   {
-    id: 'dev-garden',
+    key: 'garden',
+    id: 'a5f5928f-3d13-4c49-a99a-a58dcab35aed',
     name: 'Back garden',
     aqi: 32,
     outdoor: true,
@@ -22,7 +24,8 @@ const SEEDS = [
     lon: 151.2093,
   },
   {
-    id: 'dev-kitchen',
+    key: 'kitchen',
+    id: '4f036a14-7e7c-492c-8191-08606c056c69',
     name: 'Kitchen',
     aqi: 78,
     outdoor: false,
@@ -30,7 +33,8 @@ const SEEDS = [
     location: false,
   },
   {
-    id: 'dev-balcony',
+    key: 'balcony',
+    id: '492362d9-5987-4448-b5b7-378aad8f581b',
     name: 'Balcony',
     aqi: 128,
     outdoor: true,
@@ -40,7 +44,8 @@ const SEEDS = [
     lon: 151.2767,
   },
   {
-    id: 'dev-school',
+    key: 'school',
+    id: 'cb9dc2ff-c626-435a-a7ce-315ce657025c',
     name: 'School gate',
     aqi: 172,
     outdoor: true,
@@ -50,7 +55,8 @@ const SEEDS = [
     lon: 151.1802,
   },
   {
-    id: 'dev-workshop',
+    key: 'workshop',
+    id: 'a09f71cd-ffcc-46d9-bb0c-3ee02f5b9e74',
     name: 'Workshop',
     aqi: 240,
     outdoor: false,
@@ -58,7 +64,8 @@ const SEEDS = [
     location: false,
   },
   {
-    id: 'dev-bushfire',
+    key: 'bushfire',
+    id: 'c04a0342-3245-4770-b54d-726aee1d7fa1',
     name: 'Ridge lookout',
     aqi: 340,
     outdoor: true,
@@ -69,7 +76,8 @@ const SEEDS = [
     offline: true,
   },
   {
-    id: 'dev-new',
+    key: 'new',
+    id: 'c722c548-62c7-4d8b-807a-2306b38c6ed1',
     name: 'New sensor',
     aqi: null,
     outdoor: false,
@@ -88,11 +96,17 @@ function pm25ForAqi(aqi) {
   return 225.5 + ((aqi - 300) / 200) * 99.9
 }
 
+// DEVICE_IDS maps each seed's key to its ID, e.g. DEVICE_IDS.garden.
+export const DEVICE_IDS = Object.fromEntries(SEEDS.map((seed) => [seed.key, seed.id]))
+
+// An ID no device has, for the not-found states.
+export const MISSING_DEVICE_ID = 'f5d8c9b4-5cfb-4910-85da-9c870dfb651f'
+
 export function makeDevices() {
   const created = Date.now() - 90 * DAY
   return SEEDS.map((seed, index) => ({
     id: seed.id,
-    device_id: `dev_${seed.id.replace('dev-', '').padEnd(12, '0')}a1b2c3d4e5f6`,
+    device_id: `dev_${seed.id.replaceAll('-', '')}`,
     name: seed.name,
     is_public: seed.public,
     is_outdoor: seed.outdoor,
@@ -102,6 +116,10 @@ export function makeDevices() {
     created_at: iso(created + index * DAY),
     updated_at: iso(Date.now() - index * HOUR),
   }))
+}
+
+export function isKnownDevice(id) {
+  return SEEDS.some((seed) => seed.id === id)
 }
 
 export function hasReadings(id) {
@@ -140,8 +158,14 @@ export function makeCurrent(id, { offline = false } = {}) {
     status: isOffline ? 'offline' : 'online',
     last_seen: iso(Date.now() - (isOffline ? OFFLINE_FOR : 2 * MINUTE)),
     sample_count: isOffline ? 0 : 58,
-    location: seed.location ? { lat: seed.lat, lon: seed.lon, provider: 'phone' } : null,
+    location: seed.location ? seedLocation(seed) : null,
   }
+}
+
+// seedLocation matches the backend's airquality.Location: fixes come from the
+// mobile app, with the time they were taken.
+function seedLocation(seed) {
+  return { lat: seed.lat, lon: seed.lon, provider: 'mobile', timestamp: iso(Date.now() - 2 * DAY) }
 }
 
 const TIMELINES = {

@@ -1,32 +1,27 @@
 import { useEffect, useState } from 'react'
 
 import { listPublicMapDevices } from '@/lib/api'
-import { uniqueMapDevices } from '@/lib/map'
+import { nextMapState } from '@/lib/map'
 
 const REFRESH_MS = 5 * 60 * 1000
 
+const LOADING = { devices: [], state: 'loading', error: null }
+
 export function usePublicMapDevices() {
-  const [devices, setDevices] = useState([])
-  const [state, setState] = useState('loading')
-  const [error, setError] = useState(null)
+  const [map, setMap] = useState(LOADING)
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let active = true
     async function load(background = false) {
-      if (!background) setState('loading')
+      if (!background) setMap((prev) => ({ ...prev, state: 'loading' }))
+      let result
       try {
-        const data = await listPublicMapDevices()
-        if (!active) return
-        setDevices(uniqueMapDevices(data))
-        setError(null)
-        setState('ready')
+        result = { devices: await listPublicMapDevices() }
       } catch (err) {
-        if (!active) return
-        setDevices([])
-        setError(err.message)
-        if (!background) setState('error')
+        result = { error: err.message }
       }
+      if (active) setMap((prev) => nextMapState(prev, result, background))
     }
     load()
     const interval = window.setInterval(() => load(true), REFRESH_MS)
@@ -36,5 +31,5 @@ export function usePublicMapDevices() {
     }
   }, [reloadKey])
 
-  return { devices, state, error, retry: () => setReloadKey((key) => key + 1) }
+  return { ...map, retry: () => setReloadKey((key) => key + 1) }
 }
