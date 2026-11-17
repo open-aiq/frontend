@@ -56,22 +56,12 @@ export function AqiTile({ aqi, caption, loading = false, className }) {
   )
 }
 
-const BUBBLE = {
-  sm: ['size-7', 'size-4'],
-  md: ['size-10', 'size-5'],
-  lg: ['size-12', 'size-6'],
-}
-
-function Bubble({ icon: Icon, size = 'md' }) {
-  const [bubble, icon] = BUBBLE[size]
+// Bubble is the small icon beside a reading. It hints at what the number is
+// and stays quiet, so the value leads.
+function Bubble({ icon: Icon }) {
   return (
-    <span
-      className={cn(
-        'grid shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground',
-        bubble,
-      )}
-    >
-      <Icon className={icon} />
+    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
+      <Icon className="size-4" />
     </span>
   )
 }
@@ -87,20 +77,17 @@ function Value({ value, unit, className }) {
 
 const groupClass = 'rounded-[1.25rem] border bg-card text-card-foreground'
 
-// InlineMetric puts the icon beside the value, with the label underneath the
-// value: `icon | value / label`. `large` is for a card with only one metric.
+// InlineMetric puts a small icon beside the value, with the label underneath
+// the value: `icon | value / label`. `large` is for a card with only one metric.
 function InlineMetric({ icon, label, value, unit, large = false }) {
   return (
-    <div className="flex min-w-0 items-center justify-center gap-3 px-2">
-      <Bubble
-        icon={icon}
-        size={large ? 'lg' : 'md'}
-      />
+    <div className="flex min-w-0 items-center justify-center gap-2.5 px-2">
+      <Bubble icon={icon} />
       <span className="grid min-w-0 gap-1.5">
         <Value
           value={value}
           unit={unit}
-          className={large ? 'text-4xl tracking-tight' : 'text-2xl tracking-tight'}
+          className={large ? 'text-5xl tracking-tight' : 'text-3xl tracking-tight'}
         />
         <span className="truncate text-xs text-muted-foreground">{label}</span>
       </span>
@@ -131,10 +118,7 @@ export function ParticulatesGroup({ current, loading = false, className }) {
           className="grid content-center justify-items-center gap-1.5 px-2"
         >
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Bubble
-              icon={icon}
-              size="sm"
-            />
+            <Bubble icon={icon} />
             {label}
           </span>
           <Value
