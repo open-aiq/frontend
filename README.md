@@ -63,12 +63,12 @@ sign-in. A small panel in the corner switches between scenarios: mixed data, no 
 offline, no readings yet, server error, always loading and signed out. It also links to every page.
 Production builds never include `src/review/`.
 
-We also host review mode at [`/prototype/`](https://open.air-iq.net/prototype/), next to the
-mobile app's gallery, so anyone can try both without signing in. One switch at the top flips between
-Web and Mobile, and the **Screen** dropdown beside it opens a page on the active one: dashboard
-pages on Web, and the app's real screens on mock data on Mobile (the app reads `?screen=<key>`). The
-URL hash keeps your place, so you can link to `#web`, `#mobile`, or a screen such as `#web/account`
-or `#mobile/account`. `make prototype:build` builds it: review mode with the `/prototype/web/` base
+We also host review mode at [`/prototype/`](https://open.air-iq.net/prototype/), next to the mobile
+app's gallery, so anyone can try both without signing in. One switch at the top flips between Web
+and Mobile, and the **Screen** dropdown beside it opens a page on the active one: dashboard pages on
+Web, and the app's real screens on mock data on Mobile (the app reads `?screen=<key>`). The URL hash
+keeps your place, so you can link to `#web`, `#mobile`, or a screen such as `#web/account` or
+`#mobile/account`. `make prototype:build` builds it: review mode with the `/prototype/web/` base
 path, plus `make gallery:web` from the app repository, which needs Flutter and the app checked out
 at `../app` (or set `APP_DIR`). `make deploy` runs it for you. The switch page itself is
 `prototype/index.html`. For plain `<a href>` links to our own pages, use `appPath()` from
