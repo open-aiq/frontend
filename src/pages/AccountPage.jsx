@@ -47,8 +47,6 @@ const PROVIDERS = [
   { provider: 'github', strategy: 'oauth_github', label: 'GitHub', icon: GitHubIcon },
 ]
 
-const isVerified = (resource) => resource?.verification?.status === 'verified'
-
 function formatDate(value) {
   if (!value) return null
   const date = new Date(value)

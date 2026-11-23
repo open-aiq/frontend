@@ -4,7 +4,9 @@
 // The word you type to delete your account, GitHub style.
 export const DELETE_ACCOUNT_CONFIRMATION = 'farewell'
 
-const isVerified = (resource) => resource?.verification?.status === 'verified'
+// isVerified tells whether Clerk has verified an email address or a connected
+// account.
+export const isVerified = (resource) => resource?.verification?.status === 'verified'
 
 // signInMethodCount counts the ways you can still sign in: verified email
 // addresses, verified connected accounts, a password and passkeys. We never
