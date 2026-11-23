@@ -4,11 +4,21 @@ import {
   DELETE_ACCOUNT_CONFIRMATION,
   clerkErrorMessage,
   isReverificationCancelled,
+  isVerified,
   signInMethodCount,
 } from './account'
 
 const verified = { verification: { status: 'verified' } }
 const unverified = { verification: { status: 'unverified' } }
+
+describe('isVerified', () => {
+  it('is true only for a verified resource', () => {
+    expect(isVerified(verified)).toBe(true)
+    expect(isVerified(unverified)).toBe(false)
+    expect(isVerified({})).toBe(false)
+    expect(isVerified(null)).toBe(false)
+  })
+})
 
 describe('signInMethodCount', () => {
   it('counts verified emails, verified connections, a password and passkeys', () => {
